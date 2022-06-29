@@ -34,7 +34,8 @@ Clone DL-Foil from [bitbucket](https://bitbucket.org/grizzo001/dl-foil.git) into
 *Open a terminal and navigate into Method/reproduce_results/* ``` cd NeuralClassExpressionSynthesis/Method/reproduce_results/```
 - Reproduce training NCES: ``` python reproduce_training_concept_synthesizer.py``` with the following options:
 
-``` --kb KB               Knowledge base name, default carcinogenesis
+``` 
+  --kb KB               Knowledge base name, default carcinogenesis
   --lr LR               Learning rate
   --num_workers NUM_WORKERS
                         Number of workers to use to load training data
