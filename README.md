@@ -32,13 +32,38 @@ Clone DL-Foil from [bitbucket](https://bitbucket.org/grizzo001/dl-foil.git) into
 
 
 *Open a terminal and navigate into Method/reproduce_results/* ``` cd NeuralClassExpressionSynthesis/Method/reproduce_results/```
-- Reproduce training NCES: ``` python train_nces/reproduce_training_concept_synthesizers_[name_of_knowledge_base]_kb.py```
+- Reproduce training NCES: ``` python reproduce_training_concept_synthesizer.py``` with the following options:
 
-- Reproduce training NCES on all KBs: ``` sh reproduce_training_nces_on_all_kbs.sh```
+``` --kb KB               Knowledge base name, default carcinogenesis
+  --lr LR               Learning rate
+  --num_workers NUM_WORKERS
+                        Number of workers to use to load training data
+  --rnn_n_hidden RNN_N_HIDDEN
+                        Hidden size of recurrent neural networks
+  --num_examples NUM_EXAMPLES
+                        Total number of examples for concept learning
+  --decay_rate DECAY_RATE
+                        Decay rate for the optimizer
+  --grad_clip_value GRAD_CLIP_VALUE
+                        Gradient clip value
+  --optimizer OPTIMIZER
+                        Name of the optimizer to use
+  --model MODEL         Name of the concept learner architecture to use (LSTM or GRU, default GRU)
+  --max_num_atom_repeat MAX_NUM_ATOM_REPEAT
+                        Maximum number of atom repetition in a given class expression
+  --rnn_n_layers RNN_N_LAYERS
+                        Number of recurrent network layers
+  --index_score_upper_bound INDEX_SCORE_UPPER_BOUND
+                        Upper bound for scoring atoms/tokens
+  --index_score_lower_bound_rate INDEX_SCORE_LOWER_BOUND_RATE
+                        Lower bound rate
+  --drop_prob DROP_PROB
+                        Dropout rate in neural networks
+  ```
 
 - To reproduce evaluation results on concept learning, please open the jupyter notebook file ReproduceNCES.ipynb
 
-*Remark: name_of_knowledge_base is one of carcinogenesis, mutagenesis, family-benchmark, semantic_bible, vicodi*
+*Remark: --kb is one of carcinogenesis, mutagenesis, family-benchmark, semantic_bible, vicodi*
 
 ### DL-Learner (Lehmann et al.)
 
