@@ -1,5 +1,5 @@
 import numpy as np, copy
-import torch, random
+import torch
 from tqdm import tqdm
 from collections import Counter, defaultdict
 from sklearn.utils import resample
@@ -9,7 +9,7 @@ base_path = os.path.dirname(os.path.realpath(__file__)).split('helper_classes')[
 sys.path.append(base_path)
 # from util.weightedloss import WeightedMSELoss
 from base import BaseConceptSynthesis
-from helper_classes.dataloader import HeadAndRelationBatchLoader, CSDataLoader
+from helper_classes.dataloader import CSDataLoader
 from concept_synthesis.helper_classes import ConceptSynthesizer
 from torch.optim.lr_scheduler import ExponentialLR
 from torch.nn import MSELoss
@@ -20,18 +20,6 @@ plt.style.use('seaborn-whitegrid')
 from sklearn.metrics import f1_score, accuracy_score
 import time
 
-seed = 42
-random.seed(seed)
-os.environ['PYTHONHASHSEED'] = str(seed)
-np.random.seed(seed)
-torch.manual_seed(seed)
-if torch.cuda.is_available():
-    torch.cuda.manual_seed(seed)
-    torch.cuda.manual_seed_all(seed)
-    # When running on the CuDNN backend, two further options must be set
-    torch.backends.cudnn.deterministic = True
-    torch.backends.cudnn.benchmark = False
-
 class Experiment:
     
     def __init__(self, kwargs):
@@ -40,19 +28,7 @@ class Experiment:
         self.clip_value = kwargs['grad_clip_value']
         self.cs = ConceptSynthesizer(kwargs)
         self.loss = MSELoss()
-    
-    def get_data_idxs(self, data):
-        data_idxs = [(self.cs.dataloader.entity_to_idx[t[0]], self.cs.dataloader.relation_to_idx[t[1]], self.cs.dataloader.entity_to_idx[t[2]]) for t in data]
-        return data_idxs
-    
-    @staticmethod
-    def get_er_vocab(data):
-        # head entity and relation
-        er_vocab = defaultdict(list)
-        for triple in data:
-            er_vocab[(triple[0], triple[1])].append(triple[2])
-        return er_vocab
-    
+            
     def compute_accuracy(self, prediction, target):
         def soft(arg1, arg2):
             arg1_ = arg1
@@ -75,17 +51,6 @@ class Experiment:
         hard_acc = sum(map(hard, prediction, target))/len(target)
         return soft_acc, hard_acc
           
-        
-    def get_batch(self, x, y, z, batch_size, shuffle=True):
-        if shuffle:
-            indx = list(range(x.shape[0]))
-            random.shuffle(indx)
-            x, y, z = x[indx], y[indx], z[indx]
-        if len(x) >= batch_size:
-            for i in range(0, x.shape[0]-batch_size+1, batch_size):
-                yield x[i:i+batch_size], y[i:i+batch_size], z[i:i+batch_size]
-        else:
-            yield x, y, z
             
     def get_optimizer(self, synthesizer, optimizer='Adam'):
         if optimizer == 'Adam':

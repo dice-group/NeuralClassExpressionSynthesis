@@ -1,5 +1,4 @@
 import torch, torch.nn as nn, numpy as np
-from torch.nn.utils.rnn import pack_padded_sequence, pad_packed_sequence
 
 class ConceptLearner_LSTM(nn.Module):
     def __init__(self, kwargs):
