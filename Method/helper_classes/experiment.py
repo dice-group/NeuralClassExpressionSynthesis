@@ -370,6 +370,7 @@ class Experiment:
         else:
             for net in List_nets:
                 self.cs.learner_name = net
+                print('Learner: ', self.cs.learner_name)
                 self.cs.refresh()
                 train_soft_acc, train_hard_acc, train_l = self.train_and_eval(train_dataloader, test_dataloader, epochs, batch_size, kf_n_splits, cross_validate, test, save_model, optimizer, record_runtime, final)
                 Training_data.setdefault("soft acc", []).append(list(train_soft_acc))

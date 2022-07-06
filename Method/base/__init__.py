@@ -22,6 +22,7 @@ class BaseConceptSynthesis:
         self.inv_vocab = vocab
         self.vocab = {vocab[i]:i for i in range(len(vocab))}#dict(map(reversed, enumerate(vocab)))
         self.max_num_atom_repeat: Final[int] = kwargs['max_num_atom_repeat']
+        self.max_length: Final[int] = kwargs['max_length']
         self.kwargs = kwargs
         
     @property
@@ -47,7 +48,8 @@ class BaseConceptSynthesis:
     def get_scores_of_atom_indices(self, target):
         Scores = torch.zeros((len(self.vocab),self.max_num_atom_repeat))
         target = self.decompose(target)
-        scores = torch.tensor(len(target)).sqrt()*torch.linspace(self.index_score_upper_bound, self.index_score_upper_bound*(1-self.index_score_lower_bound_rate), len(target))
+        #torch.tensor(len(target)).sqrt()*
+        scores = torch.linspace(self.index_score_upper_bound, self.index_score_upper_bound*(1-self.index_score_lower_bound_rate), len(target))
         atom_counts = {a: 0 for a in target}
         for j in range(len(target)):
             try:

@@ -19,10 +19,10 @@ class CSDataLoader(BaseConceptSynthesis, Data, torch.utils.data.Dataset):
         pos = value['positive examples']
         neg = value['negative examples']
         assert '#' in pos[0] or '.' in pos[0], 'Namespace error, expected separator # or .'
-        datapoint_pos = torch.FloatTensor(self.embeddings.loc[pos].values).mean(0).unsqueeze(0)
-        datapoint_neg = torch.FloatTensor(self.embeddings.loc[neg].values).mean(0).unsqueeze(0)
+        datapoint_pos = torch.FloatTensor(self.embeddings.loc[pos].values)
+        datapoint_neg = torch.FloatTensor(self.embeddings.loc[neg].values)
         target, numerical_target = self.get_scores_of_atom_indices(key)
-        return torch.cat([datapoint_pos, datapoint_neg], 0), numerical_target, \
-    torch.cat([torch.tensor(self.vocab_df.loc[target].values.reshape(-1,)), -100*torch.ones(self.max_num_atom_repeat-len(target))], 0).long()
+        return torch.cat([datapoint_pos, -datapoint_neg], 0), numerical_target, \
+    torch.cat([torch.tensor(self.vocab_df.loc[target].values.reshape(-1,)), -100*torch.ones(self.max_length-len(target))], 0).long()
             
         

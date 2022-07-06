@@ -2,7 +2,7 @@ import torch, random
 import sys, os
 base_path = os.path.dirname(os.path.realpath(__file__)).split('concept_synthesis')[0]
 sys.path.append(base_path)
-from concept_synthesis.models import ConceptLearner_LSTM, ConceptLearner_GRU, ConceptLearner_CNN
+from concept_synthesis.models import ConceptLearner_LSTM, ConceptLearner_GRU, ConceptLearner_CNN, DeepSet
 from Embeddings.models import *
 #from owlapy.model import OWLNamedIndividual
 from ontolearn.knowledge_base import KnowledgeBase
@@ -22,7 +22,7 @@ class ConceptSynthesizer:
         vocab = list(self.atomic_concept_names) + list(self.role_names) + ['⊔', '⊓', '∃', '∀', '¬', '⊤', '⊥', '.', ' ', '(', ')']
         self.inv_vocab = vocab
         self.vocab = {vocab[i]:i for i in range(len(vocab))}
-        self.learner_name = kwargs['learner_name']
+        self.learner_name = kwargs['learner_name'] if kwargs['learner_name'] else "DeepSet"
         self.synthesizer = self.get_synthesizer()
         self.embedding_model = self.get_embedding_model(kwargs['emb_model_name'])
         
@@ -53,7 +53,9 @@ class ConceptSynthesizer:
     def get_synthesizer(self):
         self.kwargs['vocab'] = list(self.vocab.keys())
         self.kwargs['output_size'] = len(self.kwargs['vocab'])
-        if self.learner_name == 'GRU':
+        if self.learner_name == 'DeepSet':
+            return DeepSet(self.kwargs)
+        elif self.learner_name == 'GRU':
             return ConceptLearner_GRU(self.kwargs)
         elif self.learner_name == 'LSTM':
             return ConceptLearner_LSTM(self.kwargs)
