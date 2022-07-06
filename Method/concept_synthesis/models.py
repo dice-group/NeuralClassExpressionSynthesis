@@ -153,15 +153,15 @@ class DeepSet(nn.Module):
                          dtype=torch.float, requires_grad=True))
         self.Phi2 = nn.Parameter(torch.tensor(np.random.uniform(-1, 1, (256, 512)),
                          dtype=torch.float, requires_grad=True))
-        self.fc = nn.Sequential(nn.Linear(512, 1024), nn.BatchNorm1d(1024), nn.ReLU(),
+        self.fc = nn.Sequential(nn.Linear(512, 1024), nn.BatchNorm1d(1024),
                                 nn.Linear(1024, kwargs['output_size']*kwargs['max_num_atom_repeat']), nn.ReLU())
-        self.relu = nn.ReLU()
+        #self.relu = nn.ReLU()
     
     def forward(self, x, target_scores=None):
         x = x.matmul(self.Phi1)
         x = x.matmul(self.Phi2)
         x = x.mean(1).view(-1, x.shape[2])
-        x = self.relu(x)
+        #x = self.relu(x)
         x = self.fc(x).reshape(x.shape[0], len(self.kwargs['vocab']), self.kwargs['max_num_atom_repeat'])
         values, sorted_indices = x.flatten(start_dim=1,end_dim=-1).sort(descending=True)
         aligned_chars = []

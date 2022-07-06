@@ -35,7 +35,7 @@ def str2bool(v):
         
 parser = argparse.ArgumentParser()
 parser.add_argument('--kb', type=str, nargs='+', default=['carcinogenesis'], help='Knowledge base name')
-parser.add_argument('--lr', type=float, default=1e-4, help='Learning rate')
+parser.add_argument('--lr', type=float, default=1e-3, help='Learning rate')
 parser.add_argument('--num_workers', type=int, default=8, help='Number of workers to use to load training data')
 parser.add_argument('--rnn_n_hidden', type=int, default=100, help='Hidden size of recurrent neural networks')
 parser.add_argument('--num_examples', type=int, default=1000, help='Total number of examples for concept learning')
