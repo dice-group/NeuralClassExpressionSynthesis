@@ -149,20 +149,20 @@ class DeepSet(nn.Module):
         self.kwargs = kwargs
         self.name = 'DeepSet'
         
-        self.Phi1 = nn.Parameter(torch.tensor(np.random.uniform(-1, 1, (kwargs['input_size'], 256)),
+        self.Phi = nn.Parameter(torch.tensor(np.random.uniform(-1, 1, (kwargs['input_size'], 128)),
                          dtype=torch.float, requires_grad=True))
-        self.Phi2 = nn.Parameter(torch.tensor(np.random.uniform(-1, 1, (kwargs['input_size'], 256)),
-                         dtype=torch.float, requires_grad=True))
-        self.fc = nn.Sequential(nn.Linear(256, 1024), nn.BatchNorm1d(1024),
+        #self.Phi2 = nn.Parameter(torch.tensor(np.random.uniform(-1, 1, (kwargs['input_size'], 512)),
+        #                 dtype=torch.float, requires_grad=True))
+        self.fc = nn.Sequential(nn.Linear(768, 512), nn.BatchNorm1d(512), nn.Linear(512, 1024), nn.BatchNorm1d(1024), nn.ReLU(),
                                 nn.Linear(1024, kwargs['output_size']*kwargs['max_num_atom_repeat']), nn.ReLU())
         #self.relu = nn.ReLU()
     
     def forward(self, x1, x2, target_scores=None):
-        x1 = x1.matmul(self.Phi1)
-        x2 = x2.matmul(self.Phi2)
-        x1 = x1.mean(1).view(-1, x1.shape[2])
-        x2 = x2.mean(1).view(-1, x2.shape[2])
-        x = x1 * x2
+        x1 = x1.matmul(self.Phi)
+        x2 = x2.matmul(self.Phi)
+        x1 = x1.sum(1).view(-1, x1.shape[2])
+        x2 = x2.sum(1).view(-1, x2.shape[2])
+        x = torch.cat([x1*x2, x1+x2, x1-x2, x1/x2, x1, x2], dim=1)
         #x = self.relu(x)
         x = self.fc(x).reshape(x.shape[0], len(self.kwargs['vocab']), self.kwargs['max_num_atom_repeat'])
         values, sorted_indices = x.flatten(start_dim=1,end_dim=-1).sort(descending=True)

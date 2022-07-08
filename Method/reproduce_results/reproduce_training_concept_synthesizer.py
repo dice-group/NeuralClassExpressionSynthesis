@@ -31,7 +31,7 @@ def str2bool(v):
     elif v.lower() in ['f', 'false', 'n', 'no', '0']:
         return False
     else:
-        raise ValueError('Ivalid boolean value.')
+        raise ValueError('Invalid boolean value.')
         
 parser = argparse.ArgumentParser()
 parser.add_argument('--kb', type=str, nargs='+', default=['carcinogenesis'], help='Knowledge base name')

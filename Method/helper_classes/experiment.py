@@ -150,6 +150,13 @@ class Experiment:
                   "Train hard acc: {:.2f}%...".format(tr_hard_acc))
             if np.random.rand() > 0.7:
                 print("Visualizing some prediction: ", np.random.choice(pred_sequence))
+                print()
+                #print("Saving predicted scores...")
+                #np.save(self.kwargs['path_to_triples'].split("Triples")[0]+"Preds/"+f"Epoch{e}.npy", np.array(scores.detach().numpy()))
+            #if e == 0:
+            #    if not os.path.exists(self.kwargs['path_to_triples'].split("Triples")[0]+"Preds/"):
+            #        os.mkdir(self.kwargs['path_to_triples'].split("Triples")[0]+"Preds/")
+            #    np.save(self.kwargs['path_to_triples'].split("Triples")[0]+"Preds/"+f"Epoch{e}.npy", np.array(scores.detach().numpy()))
             weights_cs = copy.deepcopy(synthesizer.state_dict())
             if Train_acc['soft'] and Train_acc['soft'][-1] > best_score:
                 best_score = Train_acc['soft'][-1]
