@@ -42,7 +42,7 @@ parser.add_argument('--num_examples', type=int, default=1000, help='Total number
 parser.add_argument('--decay_rate', type=float, default=0.0, help='Decay rate for the optimizer')
 parser.add_argument('--grad_clip_value', type=float, default=5.0, help='Gradient clip value')
 parser.add_argument('--opt', type=str, default='Adam', help='Name of the optimizer to use')
-parser.add_argument('--max_num_atom_repeat', type=int, default=8, help='Maximum number of atom repetition in a given class expression')
+parser.add_argument('--max_num_atom_repeat', type=int, default=8, help='Maximum number of an atom repetition in a given class expression')
 parser.add_argument('--rnn_n_layers', type=int, default=2, help='Number of recurrent network layers')
 parser.add_argument('--index_score_upper_bound', type=float, default=10.0, help='Upper bound for scoring atoms/tokens')
 parser.add_argument('--index_score_lower_bound_rate', type=float, default=0.8, help='Lower bound rate')
@@ -74,7 +74,7 @@ for kb in args.kb:
               "learning_rate": args.lr, "decay_rate": args.decay_rate, 'grad_clip_value': args.grad_clip_value, 
               "path_to_triples": path_to_triples, 'max_num_atom_repeat': args.max_num_atom_repeat,
               'index_score_upper_bound': args.index_score_upper_bound, 'index_score_lower_bound_rate': args.index_score_lower_bound_rate,
-              'max_length': args.max_length,
+              'max_length': args.max_length, 'num_workers': args.num_workers,
               "embedding_dim": 20, "num_entities": len(triples.entities),
               "num_relations": len(triples.relations), "num_examples": args.num_examples, 'drop_prob': args.drop_prob,
               "rnn_n_layers": args.rnn_n_layers, 'input_size': 40, 'rnn_n_hidden': args.rnn_n_hidden}

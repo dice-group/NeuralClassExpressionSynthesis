@@ -14,6 +14,7 @@ from concept_synthesis.helper_classes import ConceptSynthesizer
 from torch.optim.lr_scheduler import ExponentialLR
 from torch.nn import MSELoss
 from torch.nn.utils import clip_grad_value_
+from torch.nn.utils.rnn import pad_sequence
 from collections import defaultdict
 import matplotlib.pyplot as plt
 plt.style.use('seaborn-whitegrid')
@@ -28,6 +29,7 @@ class Experiment:
         self.clip_value = kwargs['grad_clip_value']
         self.cs = ConceptSynthesizer(kwargs)
         self.loss = MSELoss()
+        self.num_workers = kwargs['num_workers']
             
     def compute_accuracy(self, prediction, target):
         def soft(arg1, arg2):
@@ -71,6 +73,24 @@ class Experiment:
         print("*"*20+"Trainable model size"+"*"*20)
         print()
         
+    @staticmethod
+    def collate_batch(batch):
+        pos_emb_list = []
+        neg_emb_list = []
+        targets_list = []
+        target_tokens_list = []
+        for pos_emb, neg_emb, tg_num, tg in batch:
+            pos_emb_list.append(pos_emb)
+            neg_emb_list.append(neg_emb)
+            targets_list.append(tg_num)
+            target_tokens_list.append(tg)
+        pos_emb_list = pad_sequence(pos_emb_list, batch_first=True, padding_value=0)
+        neg_emb_list = pad_sequence(neg_emb_list, batch_first=True, padding_value=0)
+        targets_list = pad_sequence(targets_list, batch_first=True, padding_value=0)
+        target_tokens_list = pad_sequence(target_tokens_list, batch_first=True, padding_value=-100)
+        return pos_emb_list, neg_emb_list, targets_list, target_tokens_list
+            
+        
     def map_to_token(self, idx_array):
         return [self.cs.inv_vocab[idx] for idx in idx_array if idx != -100]
     
@@ -104,11 +124,12 @@ class Experiment:
         for e in range(epochs):
             soft_acc, hard_acc = [], []
             train_losses = []
-            for x, y_numerical, target_sequence in tqdm(train_dataloader):
+            for x1, x2, y_numerical, target_sequence in tqdm(train_dataloader):
                 target_sequence = np.array(list(map(self.map_to_token, target_sequence)), dtype=object)
                 if(train_on_gpu):
-                    x, y_numerical = x.cuda(), y_numerical.cuda()
-                pred_sequence, scores = synthesizer(x, y_numerical)
+                    #x, y_numerical = x.cuda(), y_numerical.cuda()
+                    x1, x2, y_numerical = x1.cuda(), x2.cuda(), y_numerical.cuda()
+                pred_sequence, scores = synthesizer(x1, x2, y_numerical)
                 cs_loss = self.loss(scores, y_numerical)
                 s_acc, h_acc = self.compute_accuracy(pred_sequence, target_sequence)
                 soft_acc.append(s_acc); hard_acc.append(h_acc)
@@ -150,10 +171,10 @@ class Experiment:
             print()
             synthesizer.eval()
             soft_acc, hard_acc = [], []
-            for x, _, target_sequence in test_dataloader:
+            for x1, x2, _, target_sequence in test_dataloader:
                 if train_on_gpu:
-                    x = x.cuda()
-                pred_sequence, _ = synthesizer(x)
+                    x1, x2 = x1.cuda(), x2.cuda()
+                pred_sequence, _ = synthesizer(x1, x2)
                 target_sequence = np.array(list(map(self.map_to_token, target_sequence)), dtype=object)
                 s_acc, h_acc = self.compute_accuracy(pred_sequence, target_sequence)
                 soft_acc.append(s_acc); hard_acc.append(h_acc)
@@ -209,8 +230,8 @@ class Experiment:
             train_data = np.array(train_data, dtype=object)
             train_dataset = CSDataLoader(train_data[train_index], self.embeddings, self.kwargs)
             valid_dataset = CSDataLoader(train_data[valid_index], self.embeddings, self.kwargs)
-            train_dataloader = DataLoader(train_dataset, batch_size=batch_size, num_workers=8, shuffle=True)
-            valid_dataloader = DataLoader(valid_dataset, batch_size=batch_size, num_workers=8, shuffle=False)
+            train_dataloader = DataLoader(train_dataset, batch_size=batch_size, num_workers=self.num_workers, collate_fn=self.collate_batch, shuffle=True)
+            valid_dataloader = DataLoader(valid_dataset, batch_size=batch_size, num_workers=self.num_workers, collate_fn=self.collate_batch, shuffle=False)
             fold += 1
             print("*"*50)
             print("Fold {}/{}:\n".format(fold, kf_n_splits))
@@ -222,11 +243,11 @@ class Experiment:
             for e in range(epochs):
                 soft_acc, hard_acc = [], []
                 train_losses = []
-                for x, y_numerical, target_sequence in tqdm(train_dataloader):
+                for x1, x2, y_numerical, target_sequence in tqdm(train_dataloader):
                     target_sequence = np.array(list(map(self.map_to_token, target_sequence)), dtype=object)
                     if(train_on_gpu):
-                        x, y_numerical = x.cuda(), y_numerical.cuda()
-                    pred_sequence, scores = synthesizer(x, y_numerical)
+                        x1, x2, y_numerical = x1.cuda(), x2.cuda(), y_numerical.cuda()
+                    pred_sequence, scores = synthesizer(x1, x2, y_numerical)
                     cs_loss = self.loss(scores, y_numerical)
                     s_acc, h_acc = self.compute_accuracy(pred_sequence, target_sequence)
                     soft_acc.append(s_acc); hard_acc.append(h_acc)
@@ -242,11 +263,11 @@ class Experiment:
                 val_losses = []
                 synthesizer.eval()
                 soft_acc, hard_acc = [], []
-                for x, y_numerical, target_sequence in valid_dataloader:
+                for x1, x2, y_numerical, target_sequence in valid_dataloader:
                     target_sequence = np.array(list(map(self.map_to_token, target_sequence)), dtype=object)
                     if(train_on_gpu):
-                        x, y_numerical = x.cuda(), y_numerical.cuda()
-                    pred_sequence, scores = synthesizer(x)
+                        x1, x2, y_numerical = x1.cuda(), x2.cuda(), y_numerical.cuda()
+                    pred_sequence, scores = synthesizer(x1, x2)
                     val_loss = self.loss(scores, y_numerical)
                     s_acc, h_acc = self.compute_accuracy(pred_sequence, target_sequence)
                     soft_acc.append(s_acc); hard_acc.append(h_acc)
@@ -283,11 +304,11 @@ class Experiment:
             print()
             synthesizer.eval()
             soft_acc, hard_acc = [], []
-            for x, _, target_sequence in test_dataloader:
+            for x1, x2, _, target_sequence in test_dataloader:
                 target_sequence = np.array(list(map(self.map_to_token, target_sequence)), dtype=object)
                 if train_on_gpu:
-                    x = x.cuda()
-                pred_sequence, _ = synthesizer(x)
+                    x1, x2 = x1.cuda(), x2.cuda()
+                pred_sequence, _ = synthesizer(x1, x2)
                 s_acc, h_acc = self.compute_accuracy(pred_sequence, target_sequence)
                 soft_acc.append(s_acc); hard_acc.append(h_acc)
             te_soft_acc, te_hard_acc = np.mean(soft_acc), np.mean(hard_acc)
@@ -343,8 +364,8 @@ class Experiment:
         self.embeddings = self.cs.get_embedding(embedding_model=None)
         train_dataset = CSDataLoader(train_data, self.embeddings, self.kwargs)
         test_dataset = CSDataLoader(test_data, self.embeddings, self.kwargs)
-        train_dataloader = DataLoader(train_dataset, batch_size=batch_size, num_workers=8, shuffle=True)
-        test_dataloader = DataLoader(test_dataset, batch_size=batch_size, num_workers=8, shuffle=False)
+        train_dataloader = DataLoader(train_dataset, batch_size=batch_size, num_workers=self.num_workers, collate_fn=self.collate_batch, shuffle=True)
+        test_dataloader = DataLoader(test_dataset, batch_size=batch_size, num_workers=self.num_workers, collate_fn=self.collate_batch, shuffle=False)
             
         Training_data = dict()
         Validation_data = dict()
