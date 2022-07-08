@@ -129,7 +129,7 @@ dependencies:
     - smart-open==5.2.1
     - text-unidecode==1.3
     - toml==0.10.2
-    - tqdm==4.61.2
+    - tqdm
     - urllib3==1.26.6
     - transformers==4.19.2
     - datasets==2.2.2
