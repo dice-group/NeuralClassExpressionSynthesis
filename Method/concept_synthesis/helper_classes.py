@@ -2,7 +2,7 @@ import torch, random
 import sys, os
 base_path = os.path.dirname(os.path.realpath(__file__)).split('concept_synthesis')[0]
 sys.path.append(base_path)
-from concept_synthesis.models import ConceptLearner_LSTM, ConceptLearner_GRU, ConceptLearner_CNN, DeepSet
+from concept_synthesis.models import *
 from Embeddings.models import *
 #from owlapy.model import OWLNamedIndividual
 from ontolearn.knowledge_base import KnowledgeBase
