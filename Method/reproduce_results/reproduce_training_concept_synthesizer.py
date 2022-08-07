@@ -38,6 +38,7 @@ parser.add_argument('--kb', type=str, nargs='+', default=['carcinogenesis'], hel
 parser.add_argument('--lr', type=float, default=1e-3, help='Learning rate')
 parser.add_argument('--num_workers', type=int, default=8, help='Number of workers to use to load training data')
 parser.add_argument('--rnn_n_hidden', type=int, default=100, help='Hidden size of recurrent neural networks')
+parser.add_argument('--proj_dim', type=int, default=256, help='The projection dimension for examples')
 parser.add_argument('--num_examples', type=int, default=1000, help='Total number of examples for concept learning')
 parser.add_argument('--decay_rate', type=float, default=0.0, help='Decay rate for the optimizer')
 parser.add_argument('--grad_clip_value', type=float, default=5.0, help='Gradient clip value')
@@ -51,7 +52,7 @@ parser.add_argument('--drop_prob', type=float, default=0.1, help='Dropout rate i
 parser.add_argument('--epochs', type=int, default=500, help='Number of training epochs')
 parser.add_argument('--batch_size', type=int, default=256, help='Training batch size')
 parser.add_argument('--cross_validate', type=str2bool, default=False, help='Whether to use a 10-fold cross-validation setting')
-parser.add_argument('--test', type=str2bool, default=True, help='Wheter to evaluate the concept synthesizer on the test data during training')
+parser.add_argument('--test', type=str2bool, default=True, help='Whether to evaluate the concept synthesizer on the test data during training')
 parser.add_argument('--final', type=str2bool, default=False, help='Whether to train the concept synthesizer on test+train data')
 
 args = parser.parse_args()
@@ -77,9 +78,10 @@ for kb in args.kb:
               'max_length': args.max_length, 'num_workers': args.num_workers,
               "embedding_dim": 20, "num_entities": len(triples.entities),
               "num_relations": len(triples.relations), "num_examples": args.num_examples, 'drop_prob': args.drop_prob,
-              "rnn_n_layers": args.rnn_n_layers, 'input_size': 40, 'rnn_n_hidden': args.rnn_n_hidden}
+              "rnn_n_layers": args.rnn_n_layers, 'input_size': 40, 'rnn_n_hidden': args.rnn_n_hidden,
+              "proj_dim": args.proj_dim}
 
-    Models = ["DeepSet"]
+    Models = ["LSTM", "GRU"]
 
     experiment = Experiment(kwargs)
 

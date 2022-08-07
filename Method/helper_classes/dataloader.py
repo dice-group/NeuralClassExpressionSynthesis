@@ -16,8 +16,8 @@ class CSDataLoader(BaseConceptSynthesis, Data, torch.utils.data.Dataset):
     
     def __getitem__(self, idx):
         key, value = self.data_raw[idx]
-        pos = value['positive examples']
-        neg = value['negative examples']
+        pos = sorted(value['positive examples'])
+        neg = sorted(value['negative examples'])
         assert '#' in pos[0] or '.' in pos[0], 'Namespace error, expected separator # or .'
         datapoint_pos = torch.FloatTensor(self.embeddings.loc[pos].values)
         datapoint_neg = torch.FloatTensor(self.embeddings.loc[neg].values)
