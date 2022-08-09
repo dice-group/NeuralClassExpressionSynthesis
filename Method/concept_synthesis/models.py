@@ -12,8 +12,9 @@ class ConceptLearner_LSTM(nn.Module):
         # nn.LSTM(kwargs['input_size'], kwargs['rnn_n_hidden'], kwargs['rnn_n_layers'], dropout=kwargs['drop_prob'], batch_first=True)
         self.lstm1 = nn.LSTM(kwargs['proj_dim'], kwargs['rnn_n_hidden'], kwargs['rnn_n_layers'], dropout=kwargs['drop_prob'], batch_first=True)
         self.lstm2 = nn.LSTM(kwargs['proj_dim'], kwargs['rnn_n_hidden'], kwargs['rnn_n_layers'], dropout=kwargs['drop_prob'], batch_first=True)
-        self.fc = nn.Sequential(nn.Linear(kwargs['rnn_n_hidden'], 5*kwargs['rnn_n_hidden']), nn.BatchNorm1d(5*kwargs['rnn_n_hidden']), nn.ReLU(),
-                                nn.Linear(5*kwargs['rnn_n_hidden'], kwargs['output_size']*kwargs['max_num_atom_repeat']), nn.ReLU())
+        self.fc = nn.Sequential(nn.Linear(kwargs['rnn_n_hidden'], 3*kwargs['proj_dim']), nn.BatchNorm1d(3*kwargs['proj_dim']), nn.GELU(),
+                                nn.Linear(3*kwargs['proj_dim'], 2*kwargs['proj_dim']), nn.BatchNorm1d(2*kwargs['proj_dim']), nn.GELU(),
+                                nn.Linear(2*kwargs['proj_dim'], kwargs['output_size']*kwargs['max_num_atom_repeat']), nn.ReLU())
     
     def forward(self, x1, x2, target_scores=None):
         x1 = x1.matmul(self.Phi1)
@@ -67,8 +68,9 @@ class ConceptLearner_GRU(nn.Module):
                          dtype=torch.float, requires_grad=True))
         self.gru1 = nn.GRU(kwargs['proj_dim'], kwargs['rnn_n_hidden'], kwargs['rnn_n_layers'], dropout=kwargs['drop_prob'], batch_first=True)
         self.gru2 = nn.GRU(kwargs['proj_dim'], kwargs['rnn_n_hidden'], kwargs['rnn_n_layers'], dropout=kwargs['drop_prob'], batch_first=True)
-        self.fc = nn.Sequential(nn.Linear(kwargs['rnn_n_hidden'], 5*kwargs['rnn_n_hidden']), nn.BatchNorm1d(5*kwargs['rnn_n_hidden']), nn.ReLU(),
-                                nn.Linear(5*kwargs['rnn_n_hidden'], kwargs['output_size']*kwargs['max_num_atom_repeat']), nn.ReLU())
+        self.fc = nn.Sequential(nn.Linear(kwargs['rnn_n_hidden'], 3*kwargs['proj_dim']), nn.BatchNorm1d(3*kwargs['proj_dim']), nn.GELU(),
+                                nn.Linear(3*kwargs['proj_dim'], 2*kwargs['proj_dim']), nn.BatchNorm1d(2*kwargs['proj_dim']), nn.GELU(),
+                                nn.Linear(2*kwargs['proj_dim'], kwargs['output_size']*kwargs['max_num_atom_repeat']), nn.ReLU())
     
     def forward(self, x1, x2, target_scores=None):
         x1 = x1.matmul(self.Phi1)
