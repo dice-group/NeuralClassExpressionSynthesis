@@ -5,14 +5,14 @@ class ConceptLearner_LSTM(nn.Module):
         super().__init__()
         self.kwargs = kwargs
         self.name = 'LSTM'
-        #self.Phi1 = nn.Parameter(torch.tensor(np.random.uniform(-1, 1, (kwargs['input_size'], kwargs['proj_dim'])),
-        #                 dtype=torch.float, requires_grad=True))
-        #self.Phi2 = nn.Parameter(torch.tensor(np.random.uniform(-1, 1, (kwargs['input_size'], kwargs['proj_dim'])),
-        #                 dtype=torch.float, requires_grad=True))
+        self.Phi1 = nn.Parameter(torch.tensor(np.random.uniform(-1, 1, (kwargs['rnn_n_hidden'], kwargs['proj_dim'])),
+                         dtype=torch.float, requires_grad=True))
+        self.Phi2 = nn.Parameter(torch.tensor(np.random.uniform(-1, 1, (kwargs['rnn_n_hidden'], kwargs['proj_dim'])),
+                         dtype=torch.float, requires_grad=True))
         # nn.LSTM(kwargs['input_size'], kwargs['rnn_n_hidden'], kwargs['rnn_n_layers'], dropout=kwargs['drop_prob'], batch_first=True)
         self.lstm1 = nn.LSTM(kwargs['input_size'], kwargs['rnn_n_hidden'], kwargs['rnn_n_layers'], dropout=kwargs['drop_prob'], batch_first=True)
         self.lstm2 = nn.LSTM(kwargs['input_size'], kwargs['rnn_n_hidden'], kwargs['rnn_n_layers'], dropout=kwargs['drop_prob'], batch_first=True)
-        self.fc = nn.Sequential(nn.Linear(kwargs['rnn_n_hidden'], 3*kwargs['proj_dim']), nn.BatchNorm1d(3*kwargs['proj_dim']), nn.GELU(),
+        self.fc = nn.Sequential(nn.Linear(kwargs['proj_dim'], 3*kwargs['proj_dim']), nn.BatchNorm1d(3*kwargs['proj_dim']), nn.GELU(),
                                 nn.Linear(3*kwargs['proj_dim'], 2*kwargs['proj_dim']), nn.BatchNorm1d(2*kwargs['proj_dim']), nn.GELU(),
                                 nn.Linear(2*kwargs['proj_dim'], kwargs['output_size']*kwargs['max_num_atom_repeat']), nn.ReLU())
     
@@ -23,6 +23,8 @@ class ConceptLearner_LSTM(nn.Module):
         seq2, _ = self.lstm2(x2)
         out1 = seq1.sum(1).view(-1, self.kwargs['rnn_n_hidden'])
         out2 = seq2.sum(1).view(-1, self.kwargs['rnn_n_hidden'])
+        out1 = out1.matmul(self.Phi1)
+        out2 = out2.matmul(self.Phi2)
         x = out1*out2
         x = self.fc(x).reshape(x.shape[0], len(self.kwargs['vocab']), self.kwargs['max_num_atom_repeat'])
         values, sorted_indices = x.flatten(start_dim=1,end_dim=-1).sort(descending=True)
@@ -62,23 +64,23 @@ class ConceptLearner_GRU(nn.Module):
         self.kwargs = kwargs
         self.name = 'GRU'
         
-        #self.Phi1 = nn.Parameter(torch.tensor(np.random.uniform(-1, 1, (kwargs['input_size'], kwargs['proj_dim'])),
-        #                 dtype=torch.float, requires_grad=True))
-        #self.Phi2 = nn.Parameter(torch.tensor(np.random.uniform(-1, 1, (kwargs['input_size'], kwargs['proj_dim'])),
-        #                 dtype=torch.float, requires_grad=True))
+        self.Phi1 = nn.Parameter(torch.tensor(np.random.uniform(-1, 1, (kwargs['rnn_n_hidden'], kwargs['proj_dim'])),
+                         dtype=torch.float, requires_grad=True))
+        self.Phi2 = nn.Parameter(torch.tensor(np.random.uniform(-1, 1, (kwargs['rnn_n_hidden'], kwargs['proj_dim'])),
+                         dtype=torch.float, requires_grad=True))
         self.gru1 = nn.GRU(kwargs['input_size'], kwargs['rnn_n_hidden'], kwargs['rnn_n_layers'], dropout=kwargs['drop_prob'], batch_first=True)
         self.gru2 = nn.GRU(kwargs['input_size'], kwargs['rnn_n_hidden'], kwargs['rnn_n_layers'], dropout=kwargs['drop_prob'], batch_first=True)
-        self.fc = nn.Sequential(nn.Linear(kwargs['rnn_n_hidden'], 3*kwargs['proj_dim']), nn.BatchNorm1d(3*kwargs['proj_dim']), nn.GELU(),
+        self.fc = nn.Sequential(nn.Linear(kwargs['proj_dim'], 3*kwargs['proj_dim']), nn.BatchNorm1d(3*kwargs['proj_dim']), nn.GELU(),
                                 nn.Linear(3*kwargs['proj_dim'], 2*kwargs['proj_dim']), nn.BatchNorm1d(2*kwargs['proj_dim']), nn.GELU(),
                                 nn.Linear(2*kwargs['proj_dim'], kwargs['output_size']*kwargs['max_num_atom_repeat']), nn.ReLU())
     
     def forward(self, x1, x2, target_scores=None):
-        #x1 = x1.matmul(self.Phi1)
-        #x2 = x2.matmul(self.Phi2)
         seq1, _ = self.gru1(x1)
         seq2, _ = self.gru2(x2)
         out1 = seq1.sum(1).view(-1, self.kwargs['rnn_n_hidden'])
         out2 = seq2.sum(1).view(-1, self.kwargs['rnn_n_hidden'])
+        out1 = out1.matmul(self.Phi1)
+        out2 = out2.matmul(self.Phi2)
         x = out1*out2
         x = self.fc(x).reshape(x.shape[0], len(self.kwargs['vocab']), self.kwargs['max_num_atom_repeat'])
         values, sorted_indices = x.flatten(start_dim=1,end_dim=-1).sort(descending=True)
