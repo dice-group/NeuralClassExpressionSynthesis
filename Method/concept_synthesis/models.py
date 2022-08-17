@@ -12,8 +12,8 @@ class ConceptLearner_LSTM(nn.Module):
         # nn.LSTM(kwargs['input_size'], kwargs['rnn_n_hidden'], kwargs['rnn_n_layers'], dropout=kwargs['drop_prob'], batch_first=True)
         self.lstm1 = nn.LSTM(kwargs['input_size'], kwargs['rnn_n_hidden'], kwargs['rnn_n_layers'], dropout=kwargs['drop_prob'], batch_first=True)
         self.lstm2 = nn.LSTM(kwargs['input_size'], kwargs['rnn_n_hidden'], kwargs['rnn_n_layers'], dropout=kwargs['drop_prob'], batch_first=True)
-        self.fc = nn.Sequential(nn.Linear(kwargs['proj_dim'], 3*kwargs['proj_dim']), nn.BatchNorm1d(3*kwargs['proj_dim']), nn.GELU(),
-                                nn.Linear(3*kwargs['proj_dim'], 2*kwargs['proj_dim']), nn.BatchNorm1d(2*kwargs['proj_dim']), nn.GELU(),
+        self.fc = nn.Sequential(nn.Linear(kwargs['proj_dim'], 3*kwargs['proj_dim']), nn.LayerNorm(3*kwargs['proj_dim']), nn.GELU(),
+                                nn.Linear(3*kwargs['proj_dim'], 2*kwargs['proj_dim']), nn.LayerNorm(2*kwargs['proj_dim']), nn.GELU(),
                                 nn.Linear(2*kwargs['proj_dim'], kwargs['output_size']*kwargs['max_num_atom_repeat']), nn.ReLU())
     
     def forward(self, x1, x2, target_scores=None):
@@ -31,7 +31,7 @@ class ConceptLearner_LSTM(nn.Module):
         aligned_chars = []
         if target_scores is None:
             for i in range(sorted_indices.shape[0]):
-                num_select = max(1,(x[i]>self.kwargs['index_score_upper_bound']*(1-self.kwargs['index_score_lower_bound_rate'])).sum().item())
+                num_select = max(1,(x[i]>0.8*self.kwargs['index_score_upper_bound']*(1-self.kwargs['index_score_lower_bound_rate'])).sum().item())
                 atoms = []
                 stop = 0
                 while stop < num_select:
@@ -44,7 +44,7 @@ class ConceptLearner_LSTM(nn.Module):
                 aligned_chars.append(np.array(atoms, dtype=object).sum())
         else:
             for i in range(sorted_indices.shape[0]):
-                num_select = max(1,(x[i]>=min(target_scores[i][target_scores[i]!=0.])).sum().item())
+                num_select = max(1,(x[i]>=0.8*min(target_scores[i][target_scores[i]!=0.])).sum().item())
                 atoms = []
                 stop = 0
                 while stop < num_select:
@@ -70,8 +70,8 @@ class ConceptLearner_GRU(nn.Module):
                          dtype=torch.float, requires_grad=True))
         self.gru1 = nn.GRU(kwargs['input_size'], kwargs['rnn_n_hidden'], kwargs['rnn_n_layers'], dropout=kwargs['drop_prob'], batch_first=True)
         self.gru2 = nn.GRU(kwargs['input_size'], kwargs['rnn_n_hidden'], kwargs['rnn_n_layers'], dropout=kwargs['drop_prob'], batch_first=True)
-        self.fc = nn.Sequential(nn.Linear(kwargs['proj_dim'], 3*kwargs['proj_dim']), nn.BatchNorm1d(3*kwargs['proj_dim']), nn.GELU(),
-                                nn.Linear(3*kwargs['proj_dim'], 2*kwargs['proj_dim']), nn.BatchNorm1d(2*kwargs['proj_dim']), nn.GELU(),
+        self.fc = nn.Sequential(nn.Linear(kwargs['proj_dim'], 3*kwargs['proj_dim']), nn.LayerNorm(3*kwargs['proj_dim']), nn.GELU(),
+                                nn.Linear(3*kwargs['proj_dim'], 2*kwargs['proj_dim']), nn.LayerNorm(2*kwargs['proj_dim']), nn.GELU(),
                                 nn.Linear(2*kwargs['proj_dim'], kwargs['output_size']*kwargs['max_num_atom_repeat']), nn.ReLU())
     
     def forward(self, x1, x2, target_scores=None):
@@ -87,7 +87,7 @@ class ConceptLearner_GRU(nn.Module):
         aligned_chars = []
         if target_scores is None:
             for i in range(sorted_indices.shape[0]):
-                num_select = max(1,(x[i]>self.kwargs['index_score_upper_bound']*(1-self.kwargs['index_score_lower_bound_rate'])).sum().item())
+                num_select = max(1,(x[i]>0.8*self.kwargs['index_score_upper_bound']*(1-self.kwargs['index_score_lower_bound_rate'])).sum().item())
                 atoms = []
                 stop = 0
                 while stop < num_select:
@@ -100,7 +100,7 @@ class ConceptLearner_GRU(nn.Module):
                 aligned_chars.append(np.array(atoms, dtype=object).sum())
         else:
             for i in range(sorted_indices.shape[0]):
-                num_select = max(1,(x[i]>=min(target_scores[i][target_scores[i]!=0.])).sum().item())
+                num_select = max(1,(x[i]>=0.8*min(target_scores[i][target_scores[i]!=0.])).sum().item())
                 atoms = []
                 stop = 0
                 while stop < num_select:
