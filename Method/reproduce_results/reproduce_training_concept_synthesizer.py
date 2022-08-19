@@ -39,7 +39,11 @@ parser.add_argument('--lr', type=float, default=1e-3, help='Learning rate')
 parser.add_argument('--num_workers', type=int, default=8, help='Number of workers to use to load training data')
 parser.add_argument('--rnn_n_hidden', type=int, default=256, help='Hidden size of recurrent neural networks')
 parser.add_argument('--proj_dim', type=int, default=256, help='The projection dimension for examples')
+parser.add_argument('--num_inds', type=int, default=32, help='Number of induced instances')
+parser.add_argument('--num_heads', type=int, default=4, help='Number of attention heads')
+parser.add_argument('--num_seeds', type=int, default=1, help='Number of seed components in the output')
 parser.add_argument('--num_examples', type=int, default=1000, help='Total number of examples for concept learning')
+parser.add_argument('--ln', type=str2bool, default=False, help='Whether to use layer normalization')
 parser.add_argument('--decay_rate', type=float, default=0.0, help='Decay rate for the optimizer')
 parser.add_argument('--grad_clip_value', type=float, default=5.0, help='Gradient clip value')
 parser.add_argument('--opt', type=str, default='Adam', help='Name of the optimizer to use')
@@ -68,6 +72,7 @@ for kb in args.kb:
     path_to_triples = base_path+f"Datasets/{kb}/Triples/"
     triples = Data({"path_to_triples": path_to_triples})
 
+    
     kwargs = {"learner_name": "", "emb_model_name": "", 'knowledge_base_path': base_path+f"Datasets/{kb}/{kb}.owl",
               "pretrained_embedding_path": base_path+f"Datasets/{kb}/Model_weights/ConEx_GRU.pt",
               "pretrained_concept_synthesizer": base_path+f"Datasets/{kb}/Model_weights/GRU.pt", 
@@ -79,9 +84,9 @@ for kb in args.kb:
               "embedding_dim": 20, "num_entities": len(triples.entities),
               "num_relations": len(triples.relations), "num_examples": args.num_examples, 'drop_prob': args.drop_prob,
               "rnn_n_layers": args.rnn_n_layers, 'input_size': 40, 'rnn_n_hidden': args.rnn_n_hidden,
-              "proj_dim": args.proj_dim}
+              "proj_dim": args.proj_dim, 'num_inds': args.num_inds, 'num_heads': args.num_heads, 'ln': args.ln, 'num_seeds': args.num_seeds}
 
-    Models = ["LSTM", "GRU"]
+    Models = ["SetTransformer", "DeepSet"]
 
     experiment = Experiment(kwargs)
 

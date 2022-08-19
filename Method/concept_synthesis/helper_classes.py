@@ -1,4 +1,4 @@
-import torch, random
+import torch
 import sys, os
 base_path = os.path.dirname(os.path.realpath(__file__)).split('concept_synthesis')[0]
 sys.path.append(base_path)
@@ -55,6 +55,8 @@ class ConceptSynthesizer:
         self.kwargs['output_size'] = len(self.kwargs['vocab'])
         if self.learner_name == 'DeepSet':
             return DeepSet(self.kwargs)
+        elif self.learner_name == 'SetTransformer':
+            return SetTransformer(self.kwargs)
         elif self.learner_name == 'GRU':
             return ConceptLearner_GRU(self.kwargs)
         elif self.learner_name == 'LSTM':
@@ -94,5 +96,4 @@ class ConceptSynthesizer:
     #        x, _, _ = self.dataloader.load(self.get_embedding(self.embedding_model), datapoint, 1, False)
     #    return self.synthesizer(x)
     #
-    
     

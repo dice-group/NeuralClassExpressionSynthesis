@@ -1,4 +1,5 @@
 import torch, torch.nn as nn, numpy as np
+from .modules import *
 
 class ConceptLearner_LSTM(nn.Module):
     def __init__(self, kwargs):
@@ -115,11 +116,11 @@ class ConceptLearner_GRU(nn.Module):
 
     
     
-class DeepSet(nn.Module):
+class DeepSet_(nn.Module):
     def __init__(self, kwargs):
         super().__init__()
         self.kwargs = kwargs
-        self.name = 'DeepSet'
+        self.name = 'DeepSet_'
         
         self.Phi1 = nn.Parameter(torch.tensor(np.random.uniform(-1, 1, (kwargs['input_size'], 768)),
                          dtype=torch.float, requires_grad=True))
@@ -155,6 +156,114 @@ class DeepSet(nn.Module):
         else:
             for i in range(sorted_indices.shape[0]):
                 num_select = max(1,(x[i]>0.9*min(target_scores[i][target_scores[i]!=0.])).sum().item())
+                atoms = []
+                stop = 0
+                while stop < num_select:
+                    v = values[i][stop]
+                    try:
+                        atoms.append(self.kwargs['vocab'][(x[i]==v).nonzero().squeeze()[0].item()])
+                    except ValueError:
+                        atoms.append(self.kwargs['vocab'][(x[i]==v).nonzero().squeeze()[0][0].item()])
+                    stop += 1
+                aligned_chars.append(np.array(atoms, dtype=object).sum())
+        return aligned_chars, x
+    
+
+class DeepSet(nn.Module):
+    def __init__(self, kwargs):
+        super(DeepSet, self).__init__()
+        self.kwargs = kwargs
+        self.name = 'DeepSet'
+        self.enc = nn.Sequential(
+                nn.Linear(kwargs['input_size'], kwargs['rnn_n_hidden']),
+                nn.ReLU(),
+                nn.Linear(kwargs['rnn_n_hidden'], kwargs['rnn_n_hidden']),
+                nn.ReLU(),
+                nn.Linear(kwargs['rnn_n_hidden'], kwargs['rnn_n_hidden']),
+                nn.ReLU(),
+                nn.Linear(kwargs['rnn_n_hidden'], kwargs['rnn_n_hidden']))
+        self.dec = nn.Sequential(
+                nn.Linear(2*kwargs['rnn_n_hidden'], kwargs['rnn_n_hidden']),
+                nn.ReLU(),
+                nn.Linear(kwargs['rnn_n_hidden'], kwargs['rnn_n_hidden']),
+                nn.ReLU(),
+                nn.Linear(kwargs['rnn_n_hidden'], kwargs['rnn_n_hidden']),
+                nn.ReLU(),
+                nn.Linear(kwargs['rnn_n_hidden'], kwargs['output_size']*kwargs['max_num_atom_repeat']))
+
+    def forward(self, x1, x2, target_scores=None):
+        x1 = self.enc(x1).mean(-2)
+        x2 = self.enc(x2).mean(-2)
+        x = torch.cat([x1,x2], -1)
+        x = self.dec(x).reshape(-1, len(self.kwargs['vocab']), self.kwargs['max_num_atom_repeat'])
+        values, sorted_indices = x.flatten(start_dim=1,end_dim=-1).sort(descending=True)
+        aligned_chars = []
+        if target_scores is None:
+            for i in range(sorted_indices.shape[0]):
+                num_select = max(1,(x[i]>0.8*self.kwargs['index_score_upper_bound']*(1-self.kwargs['index_score_lower_bound_rate'])).sum().item())
+                atoms = []
+                stop = 0
+                while stop < num_select:
+                    v = values[i][stop]
+                    try:
+                        atoms.append(self.kwargs['vocab'][(x[i]==v).nonzero().squeeze()[0].item()])
+                    except ValueError:
+                        atoms.append(self.kwargs['vocab'][(x[i]==v).nonzero().squeeze()[0][0].item()])
+                    stop += 1
+                aligned_chars.append(np.array(atoms, dtype=object).sum())
+        else:
+            for i in range(sorted_indices.shape[0]):
+                num_select = max(1,(x[i]>0.8*min(target_scores[i][target_scores[i]!=0.])).sum().item())
+                atoms = []
+                stop = 0
+                while stop < num_select:
+                    v = values[i][stop]
+                    try:
+                        atoms.append(self.kwargs['vocab'][(x[i]==v).nonzero().squeeze()[0].item()])
+                    except ValueError:
+                        atoms.append(self.kwargs['vocab'][(x[i]==v).nonzero().squeeze()[0][0].item()])
+                    stop += 1
+                aligned_chars.append(np.array(atoms, dtype=object).sum())
+        return aligned_chars, x
+
+    
+class SetTransformer(nn.Module):
+    def __init__(self, kwargs):
+        super(SetTransformer, self).__init__()
+        self.name = 'SetTransformer'
+        self.kwargs = kwargs
+        self.enc = nn.Sequential(
+                ISAB(kwargs['input_size'], kwargs['rnn_n_hidden'], kwargs['num_heads'], kwargs['num_inds'], ln=kwargs['ln']),
+                ISAB(kwargs['rnn_n_hidden'], kwargs['rnn_n_hidden'], kwargs['num_heads'], kwargs['num_inds'], ln=kwargs['ln']))
+        self.dec = nn.Sequential(
+                PMA(kwargs['rnn_n_hidden'], kwargs['num_heads'], kwargs['num_seeds'], ln=kwargs['ln']),
+                SAB(kwargs['rnn_n_hidden'], kwargs['rnn_n_hidden'], kwargs['num_heads'], ln=kwargs['ln']),
+                SAB(kwargs['rnn_n_hidden'], kwargs['rnn_n_hidden'], kwargs['num_heads'], ln=kwargs['ln']),
+                nn.Linear(kwargs['rnn_n_hidden'], kwargs['output_size']*kwargs['max_num_atom_repeat']))
+
+    def forward(self, x1, x2, target_scores=None):
+        x1 = self.enc(x1)
+        x2 = self.enc(x2)
+        x = torch.cat([x1,x2], -2)
+        x = self.dec(x).reshape(-1, len(self.kwargs['vocab']), self.kwargs['max_num_atom_repeat'])
+        values, sorted_indices = x.flatten(start_dim=1,end_dim=-1).sort(descending=True)
+        aligned_chars = []
+        if target_scores is None:
+            for i in range(sorted_indices.shape[0]):
+                num_select = max(1,(x[i]>0.8*self.kwargs['index_score_upper_bound']*(1-self.kwargs['index_score_lower_bound_rate'])).sum().item())
+                atoms = []
+                stop = 0
+                while stop < num_select:
+                    v = values[i][stop]
+                    try:
+                        atoms.append(self.kwargs['vocab'][(x[i]==v).nonzero().squeeze()[0].item()])
+                    except ValueError:
+                        atoms.append(self.kwargs['vocab'][(x[i]==v).nonzero().squeeze()[0][0].item()])
+                    stop += 1
+                aligned_chars.append(np.array(atoms, dtype=object).sum())
+        else:
+            for i in range(sorted_indices.shape[0]):
+                num_select = max(1,(x[i]>0.8*min(target_scores[i][target_scores[i]!=0.])).sum().item())
                 atoms = []
                 stop = 0
                 while stop < num_select:
