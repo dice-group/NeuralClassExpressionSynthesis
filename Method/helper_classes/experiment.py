@@ -36,9 +36,9 @@ class Experiment:
             arg1_ = arg1
             arg2_ = arg2
             if isinstance(arg1_, str):
-                arg1_ = set(BaseConceptSynthesis.decompose(arg1_)) - {' '}
+                arg1_ = set(BaseConceptSynthesis.decompose(arg1_))
             if isinstance(arg2_, str):
-                arg2_ = set(BaseConceptSynthesis.decompose(arg2_)) - {' '}
+                arg2_ = set(BaseConceptSynthesis.decompose(arg2_))
             return 100*float(len(arg1_.intersection(arg2_)))/len(arg1_.union(arg2_))
         
         def hard(arg1, arg2):

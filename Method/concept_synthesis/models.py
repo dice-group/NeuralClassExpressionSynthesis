@@ -175,21 +175,21 @@ class DeepSet(nn.Module):
         self.kwargs = kwargs
         self.name = 'DeepSet'
         self.enc = nn.Sequential(
-                nn.Linear(kwargs['input_size'], kwargs['rnn_n_hidden']),
+                nn.Linear(kwargs['input_size'], kwargs['proj_dim']),
                 nn.ReLU(),
-                nn.Linear(kwargs['rnn_n_hidden'], kwargs['rnn_n_hidden']),
+                nn.Linear(kwargs['proj_dim'], kwargs['proj_dim']),
                 nn.ReLU(),
-                nn.Linear(kwargs['rnn_n_hidden'], kwargs['rnn_n_hidden']),
+                nn.Linear(kwargs['proj_dim'], kwargs['proj_dim']),
                 nn.ReLU(),
-                nn.Linear(kwargs['rnn_n_hidden'], kwargs['rnn_n_hidden']))
+                nn.Linear(kwargs['proj_dim'], kwargs['proj_dim']))
         self.dec = nn.Sequential(
-                nn.Linear(2*kwargs['rnn_n_hidden'], kwargs['rnn_n_hidden']),
+                nn.Linear(2*kwargs['proj_dim'], kwargs['proj_dim']),
                 nn.ReLU(),
-                nn.Linear(kwargs['rnn_n_hidden'], kwargs['rnn_n_hidden']),
+                nn.Linear(kwargs['proj_dim'], kwargs['proj_dim']),
                 nn.ReLU(),
-                nn.Linear(kwargs['rnn_n_hidden'], kwargs['rnn_n_hidden']),
+                nn.Linear(kwargs['proj_dim'], kwargs['proj_dim']),
                 nn.ReLU(),
-                nn.Linear(kwargs['rnn_n_hidden'], kwargs['output_size']*kwargs['max_num_atom_repeat']))
+                nn.Linear(kwargs['proj_dim'], kwargs['output_size']*kwargs['max_num_atom_repeat']))
 
     def forward(self, x1, x2, target_scores=None):
         x1 = self.enc(x1).mean(-2)
@@ -233,13 +233,13 @@ class SetTransformer(nn.Module):
         self.name = 'SetTransformer'
         self.kwargs = kwargs
         self.enc = nn.Sequential(
-                ISAB(kwargs['input_size'], kwargs['rnn_n_hidden'], kwargs['num_heads'], kwargs['num_inds'], ln=kwargs['ln']),
-                ISAB(kwargs['rnn_n_hidden'], kwargs['rnn_n_hidden'], kwargs['num_heads'], kwargs['num_inds'], ln=kwargs['ln']))
+                ISAB(kwargs['input_size'], kwargs['proj_dim'], kwargs['num_heads'], kwargs['num_inds'], ln=kwargs['ln']),
+                ISAB(kwargs['proj_dim'], kwargs['proj_dim'], kwargs['num_heads'], kwargs['num_inds'], ln=kwargs['ln']))
         self.dec = nn.Sequential(
-                PMA(kwargs['rnn_n_hidden'], kwargs['num_heads'], kwargs['num_seeds'], ln=kwargs['ln']),
-                SAB(kwargs['rnn_n_hidden'], kwargs['rnn_n_hidden'], kwargs['num_heads'], ln=kwargs['ln']),
-                SAB(kwargs['rnn_n_hidden'], kwargs['rnn_n_hidden'], kwargs['num_heads'], ln=kwargs['ln']),
-                nn.Linear(kwargs['rnn_n_hidden'], kwargs['output_size']*kwargs['max_num_atom_repeat']))
+                PMA(kwargs['proj_dim'], kwargs['num_heads'], kwargs['num_seeds'], ln=kwargs['ln']),
+                SAB(kwargs['proj_dim'], kwargs['proj_dim'], kwargs['num_heads'], ln=kwargs['ln']),
+                SAB(kwargs['proj_dim'], kwargs['proj_dim'], kwargs['num_heads'], ln=kwargs['ln']),
+                nn.Linear(kwargs['proj_dim'], kwargs['output_size']*kwargs['max_num_atom_repeat']))
 
     def forward(self, x1, x2, target_scores=None):
         x1 = self.enc(x1)

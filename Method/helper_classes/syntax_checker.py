@@ -380,30 +380,27 @@ class SyntaxChecker:
 #            return disjunctions
 
         list_atoms = self.correct(expression)
-        possible_concepts = list(self.get_suggestions(list_atoms))
-#        print('Possible CEs: ', possible_concepts)
-        self.class_expressions = []
-        for c in possible_concepts:
-            ce = self.get_concept(c)
-            self.class_expressions += [ce]
-#            else:
-#                concept_components = self.recursive_concept_constructor(list_atoms)
-#                joins = [j for j in list_atoms if j in ['⊔', '⊓']]
-#                assert len(joins) == len(concept_components) - 1, 'Cannot perform joins'
-#                self.class_expressions += [self.knowledge_base.union(get_conjunctions(concept_components, joins))]
-        return self
+        ce = list(self.get_suggestions(list_atoms))[-1]
+        return self.get_concept(ce)
+        #for c in possible_concepts:
+        #    ce = self.get_concept(c)
+        #    self.class_expressions += [ce]
+        #return self
     
-    def evaluate(self, pos_examples, verbose = True):
-        Instances = []
+    def evaluate(self, prediction, pos_examples, neg_examples, verbose = True):
         all_individuals = set(self.knowledge_base.individuals())
-        for ce in self.class_expressions:
-            Instances += [{ind.get_iri().as_str().split("/")[-1] for ind in self.knowledge_base.individuals(ce)}]
+        ce = self.concept(prediction)
+        #for ce in self.class_expressions:
+        instances ={ind.get_iri().as_str().split("/")[-1] for ind in self.knowledge_base.individuals(ce)}
         #instances += [{ind.get_iri().as_str().split("/")[-1] for ind in self.knowledge_base.individuals(self.class_expression[1])}]
-        f1 = [F1.score(set(pos_examples), instances) for instances in Instances]
-        acc = [Accuracy.score(set(pos_examples), instances, all_individuals) for instances in Instances]
-        best_concept = self.renderer.render(self.class_expressions[np.argmax(f1)])
+        f1 = F1.score(set(pos_examples), instances)
+        acc = Accuracy.score(set(pos_examples), set(neg_examples), instances, all_individuals)
+        #acc = [Accuracy.score(set(pos_examples), instances, all_individuals) for instances in Instances]
+        class_expression = self.renderer.render(ce)
         if verbose:
-            print("Accuracy: {}%".format([100*s for s in acc]))
-            print("F1 score: {}%".format([100*s for s in f1]))
-        return best_concept, 100*max(acc), 100*max(f1)
-        
+            print('\n****************************')
+            print("Prediction: {}, Acc: {}%, F1: {}%".format(class_expression, 100*acc, 100*f1))
+            print('****************************')
+            
+        return class_expression, 100*acc, 100*f1
+    
