@@ -250,7 +250,7 @@ class SetTransformer(nn.Module):
         aligned_chars = []
         if target_scores is None:
             for i in range(sorted_indices.shape[0]):
-                num_select = max(1,(x[i]>0.8*self.kwargs['index_score_upper_bound']*(1-self.kwargs['index_score_lower_bound_rate'])).sum().item())
+                num_select = max(1,(x[i]>=0.9*self.kwargs['index_score_upper_bound']*(1-self.kwargs['index_score_lower_bound_rate'])).sum().item())
                 atoms = []
                 stop = 0
                 while stop < num_select:
@@ -263,7 +263,7 @@ class SetTransformer(nn.Module):
                 aligned_chars.append(np.array(atoms, dtype=object).sum())
         else:
             for i in range(sorted_indices.shape[0]):
-                num_select = max(1,(x[i]>0.8*min(target_scores[i][target_scores[i]!=0.])).sum().item())
+                num_select = max(1,(x[i]>0.9*min(target_scores[i][target_scores[i]!=0.])).sum().item())
                 atoms = []
                 stop = 0
                 while stop < num_select:

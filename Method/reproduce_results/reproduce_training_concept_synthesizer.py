@@ -87,7 +87,7 @@ for kb in args.kb:
               "rnn_n_layers": args.rnn_n_layers, 'input_size': 40, 'rnn_n_hidden': args.rnn_n_hidden,
               "proj_dim": args.proj_dim, 'num_inds': args.num_inds, 'num_heads': args.num_heads, 'ln': args.ln, 'num_seeds': args.num_seeds}
 
-    Models = ["SetTransformer", "DeepSet"]
+    Models = ["SetTransformer"]
 
     experiment = Experiment(kwargs)
 
