@@ -51,6 +51,7 @@ parser.add_argument('--max_num_atom_repeat', type=int, default=8, help='Maximum 
 parser.add_argument('--rnn_n_layers', type=int, default=2, help='Number of recurrent network layers')
 parser.add_argument('--index_score_upper_bound', type=float, default=10.0, help='Upper bound for scoring atoms/tokens')
 parser.add_argument('--index_score_lower_bound_rate', type=float, default=0.8, help='Lower bound rate')
+parser.add_argument('--use_adaptive_bounds', type=str2bool, default=False, help='Whether to rescale the lower and upper bounds based on class expression lengths')
 parser.add_argument('--max_length', type=int, default=32, help='Maximum length of class expressions')
 parser.add_argument('--drop_prob', type=float, default=0.1, help='Dropout rate in neural networks')
 parser.add_argument('--epochs', type=int, default=500, help='Number of training epochs')
@@ -80,7 +81,7 @@ for kb in args.kb:
               "learning_rate": args.lr, "decay_rate": args.decay_rate, 'grad_clip_value': args.grad_clip_value, 
               "path_to_triples": path_to_triples, 'max_num_atom_repeat': args.max_num_atom_repeat,
               'index_score_upper_bound': args.index_score_upper_bound, 'index_score_lower_bound_rate': args.index_score_lower_bound_rate,
-              'max_length': args.max_length, 'num_workers': args.num_workers,
+              'max_length': args.max_length, 'num_workers': args.num_workers, 'use_adaptive_bounds': args.use_adaptive_bounds,
               "embedding_dim": 20, "num_entities": len(triples.entities),
               "num_relations": len(triples.relations), "num_examples": args.num_examples, 'drop_prob': args.drop_prob,
               "rnn_n_layers": args.rnn_n_layers, 'input_size': 40, 'rnn_n_hidden': args.rnn_n_hidden,
