@@ -42,6 +42,8 @@ class BaseConceptSynthesis:
                 list_ordered_pieces.extend([concept, concept_name[i]])
             elif concept:
                 list_ordered_pieces.append(concept)
+            elif i < len(concept_name):
+                list_ordered_pieces.append(concept_name[i])
             i += 1
         return list_ordered_pieces
     
