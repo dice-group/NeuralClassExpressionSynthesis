@@ -1,5 +1,5 @@
 {
    "Concept synthesizer": "SetTransformer",
-   "Number of Epochs": 500,
-   "Runtime (s)": 1587.4669377803802
+   "Number of Epochs": 800,
+   "Runtime (s)": 3287.7250900268555
 }
