@@ -35,6 +35,7 @@ def str2bool(v):
         
 parser = argparse.ArgumentParser()
 parser.add_argument('--kb', type=str, nargs='+', default=['carcinogenesis'], help='Knowledge base name')
+parser.add_argument('--models', type=str, nargs='+', default=['LSTM', 'GRU', 'SetTransformer'], help='Neural models')
 parser.add_argument('--lr', type=float, default=1e-3, help='Learning rate')
 parser.add_argument('--num_workers', type=int, default=8, help='Number of workers to use to load training data')
 parser.add_argument('--rnn_n_hidden', type=int, default=128, help='Hidden size of recurrent neural networks')
@@ -54,7 +55,7 @@ parser.add_argument('--lbr', type=float, default=0.8, help='Lower bound rate')
 parser.add_argument('--use_adaptive_bounds', type=str2bool, default=False, help='Whether to rescale the lower and upper bounds based on class expression lengths')
 parser.add_argument('--max_length', type=int, default=32, help='Maximum length of class expressions')
 parser.add_argument('--drop_prob', type=float, default=0.1, help='Dropout rate in neural networks')
-parser.add_argument('--epochs', type=int, default=500, help='Number of training epochs')
+parser.add_argument('--epochs', type=int, default=1000, help='Number of training epochs')
 parser.add_argument('--batch_size', type=int, default=256, help='Training batch size')
 parser.add_argument('--cross_validate', type=str2bool, default=False, help='Whether to use a 10-fold cross-validation setting')
 parser.add_argument('--test', type=str2bool, default=True, help='Whether to evaluate the concept synthesizer on the test data during training')
@@ -87,8 +88,6 @@ for kb in args.kb:
               "rnn_n_layers": args.rnn_n_layers, 'input_size': 40, 'rnn_n_hidden': args.rnn_n_hidden,
               "proj_dim": args.proj_dim, 'num_inds': args.num_inds, 'num_heads': args.num_heads, 'ln': args.ln, 'num_seeds': args.num_seeds}
 
-    Models = ["LSTM", "GRU", "SetTransformer"]
-
     experiment = Experiment(kwargs)
 
     data_train, data_test = list(data_train.items()), list(data_test.items())
@@ -102,6 +101,6 @@ for kb in args.kb:
         data_train = data_train + data_test
         test = False
         cross_validate = False
-    experiment.train_all_nets(Models, data_train, data_test, epochs=args.epochs, batch_size=args.batch_size, kf_n_splits=10, 
+    experiment.train_all_nets(args.models, data_train, data_test, epochs=args.epochs, batch_size=args.batch_size, kf_n_splits=10, 
                               cross_validate=cross_validate, test=test, save_model = save_model,
                               optimizer = args.opt, record_runtime=record_runtime, final=final)
