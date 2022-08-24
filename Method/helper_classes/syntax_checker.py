@@ -5,6 +5,12 @@ sys.path.append(os.path.dirname(os.path.realpath(__file__)))
 from owlapy.render import DLSyntaxObjectRenderer
 from metrics import Accuracy, F1
 
+from tokenizers import Tokenizer
+from tokenizers.models import BPE
+from tokenizers.trainers import BpeTrainer
+from tokenizers.pre_tokenizers import Whitespace, WhitespaceSplit
+from transformers import AutoTokenizer, PreTrainedTokenizerFast
+
 class SyntaxChecker:
     '''-Python class for checking and validating/correcting/suggesting DL class expressions
        -Includes methods that can query the instances of a class expression and compute the f-measure w.r.t. positive and negative examples    
@@ -23,6 +29,13 @@ class SyntaxChecker:
         self.role_names = frozenset(self.role_str_to_role.keys())
         self.atomic_concept_names = frozenset([self.renderer.render(a) for a in atomic_concepts])
         self.atoms = self.role_names.union(self.atomic_concept_names).union({'⊔', '⊓', '∃', '∀', '¬', '⊤', '⊥', '.', ' '})
+        Vocab = ['⊔', '⊓', '∃', '∀', '¬', '⊤', '⊥', ')', '(', '.'] + list(self.atomic_concept_names) + list(self.role_names)
+        tokenizer = Tokenizer(BPE(unk_token='[UNK]'))
+        trainer = BpeTrainer(special_tokens=["[UNK]", "[CLS]", "[SEP]", "[PAD]", "[MASK]"])
+        tokenizer.pre_tokenizer = WhitespaceSplit()
+        tokenizer.train_from_iterator(Vocab, trainer)
+        self.tokenizer = PreTrainedTokenizerFast(tokenizer_object=tokenizer)
+        self.tokenizer.pad_token = "[PAD]"
         
     def split(self, atom):
         if atom in self.atoms:
@@ -68,8 +81,8 @@ class SyntaxChecker:
         expression = expression.replace('⊔ ⊓', '⊔'); expression = expression.replace('⊓ ⊔', '⊓')
         expression = expression.replace('∃∀', '∃'); expression = expression.replace('∀∃', '∀')
         expression = expression.replace('∃ ∀', '∃'); expression = expression.replace('∀ ∃', '∀')
-        dec_expression = self.split2(expression)
-        dec_expression = [atm for atm in dec_expression if atm != ' ']
+        dec_expression = self.tokenizer.tokenize(expression)
+        dec_expression = [atm for atm in dec_expression if atm not in [' ', ')', '(']]
         filtered_atoms = []
         for i in range(len(dec_expression)):
             if i == len(dec_expression)-1 and dec_expression[i] in set(spec_chars)-{'⊤', '⊥', '.'}:
@@ -149,7 +162,7 @@ class SyntaxChecker:
     
     def correct(self, expression: str, max_num_trials = 5):
 #        print('start: ', expression)
-        if set(self.split2(expression)).issubset({'⊔', '⊓', '∃', '∀', '¬', '.', ' '}):
+        if set(self.tokenizer.tokenize(expression)).issubset({'⊔', '⊓', '∃', '∀', '¬', '.', ' '}):
             expression = '⊤'
         seq_prev = ''
         seq = expression

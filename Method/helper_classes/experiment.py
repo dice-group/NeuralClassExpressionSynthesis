@@ -374,27 +374,20 @@ class Experiment:
         train_dataloader = DataLoader(train_dataset, batch_size=batch_size, num_workers=self.num_workers, collate_fn=self.collate_batch, shuffle=True)
         test_dataloader = DataLoader(test_dataset, batch_size=batch_size, num_workers=self.num_workers, collate_fn=self.collate_batch, shuffle=False)
             
-        Training_data = dict()
-        Validation_data = dict()
         if not os.path.exists(self.kwargs['path_to_triples'].split("Triples")[0]+"Training_curves"):
             os.mkdir(self.kwargs['path_to_triples'].split("Triples")[0]+"Training_curves")
+        if not os.path.exists(self.kwargs['path_to_triples'].split("Triples")[0]+"Plot_data/"):
+            os.mkdir(self.kwargs['path_to_triples'].split("Triples")[0]+"Plot_data/")
         if cross_validate:
             for net in List_nets:
                 self.cs.learner_name = net
                 self.cs.refresh()
                 train_soft_acc, train_hard_acc, val_soft_acc, val_hard_acc, train_l, val_l = self.train_and_eval(train_data, test_dataloader, epochs, batch_size, kf_n_splits, cross_validate, test, save_model, optimizer, record_runtime, final)
-                Training_data.setdefault("soft acc", []).append(list(train_soft_acc))
-                Training_data.setdefault("hard acc", []).append(list(train_hard_acc))
-                Training_data.setdefault("loss", []).append(list(train_l))
-                Validation_data.setdefault("soft acc", []).append(list(val_soft_acc))
-                Validation_data.setdefault("hard acc", []).append(list(val_hard_acc))
-                Validation_data.setdefault("loss", []).append(list(val_l))
-
-            if not os.path.exists(self.kwargs['path_to_triples'].split("Triples")[0]+"Plot_data/"):
-                os.mkdir(self.kwargs['path_to_triples'].split("Triples")[0]+"Plot_data/")
-            with open(self.kwargs['path_to_triples'].split("Triples")[0]+"Plot_data/plot_data_with_val.json", "w") as plot_file:
-                json.dump({'train': Training_data, 'val': Validation_data}, plot_file, indent=3)
-            
+                with open(self.kwargs['path_to_triples'].split("Triples")[0]+f"Plot_data/{net}_plot_data_with_val.json", "w") as plot_file:
+                    json.dump({'train': {"soft acc": list(train_soft_acc), "hard acc": list(train_hard_acc), "loss": list(train_l)},
+                               'val': {"soft acc": list(val_soft_acc), "hard acc": list(val_hard_acc), "loss": list(val_l)}},
+                                plot_file, indent=3)
+                        
         else:
             for net in List_nets:
                 self.cs.learner_name = net
@@ -402,11 +395,7 @@ class Experiment:
                 print('Learner: ', self.cs.learner_name)
                 self.cs.refresh()
                 train_soft_acc, train_hard_acc, train_l = self.train_and_eval(train_dataloader, test_dataloader, epochs, batch_size, kf_n_splits, cross_validate, test, save_model, optimizer, record_runtime, final)
-                Training_data.setdefault("soft acc", []).append(list(train_soft_acc))
-                Training_data.setdefault("hard acc", []).append(list(train_hard_acc))
-                Training_data.setdefault("loss", []).append(train_l)
+                with open(self.kwargs['path_to_triples'].split("Triples")[0]+f"Plot_data/{net}_plot_data.json", "w") as plot_file:
+                    json.dump({"soft acc": list(train_soft_acc), "hard acc": list(train_hard_acc), "loss": list(train_l)}, plot_file, indent=3)
 
-            if not os.path.exists(self.kwargs['path_to_triples'].split("Triples")[0]+"Plot_data/"):
-                os.mkdir(self.kwargs['path_to_triples'].split("Triples")[0]+"Plot_data/")
-            with open(self.kwargs['path_to_triples'].split("Triples")[0]+"Plot_data/plot_data.json", "w") as plot_file:
-                json.dump(Training_data, plot_file, indent=3)
+            

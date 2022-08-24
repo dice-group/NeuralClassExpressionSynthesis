@@ -13,8 +13,8 @@ class BaseConceptSynthesis:
         kb = KnowledgeBase(path=self.knowledge_base_path)
         self.__num_examples__ = min(kwargs['num_examples'], kb.individuals_count()//2)
         self.dl_syntax_renderer = DLSyntaxObjectRenderer()
-        self.index_score_upper_bound = kwargs['index_score_upper_bound']
-        self.index_score_lower_bound_rate = kwargs['index_score_lower_bound_rate']
+        self.alpha = kwargs['alpha']
+        self.lbr = kwargs['lbr']
         atomic_concepts: Final = frozenset(kb.ontology().classes_in_signature())
         self.atomic_concept_names: Final = frozenset([self.dl_syntax_renderer.render(a) for a in atomic_concepts])
         self.role_names: Final = frozenset([rel.get_iri().get_remainder() for rel in kb.ontology().object_properties_in_signature()])
@@ -51,9 +51,9 @@ class BaseConceptSynthesis:
         Scores = torch.zeros((len(self.vocab),self.max_num_atom_repeat))
         target = self.decompose(target)
         if self.kwargs['use_adaptive_bounds']:
-            scores = torch.tensor(len(target)).sqrt()*torch.linspace(self.index_score_upper_bound, self.index_score_upper_bound*(1-self.index_score_lower_bound_rate), len(target))
+            scores = torch.tensor(len(target)).sqrt()*torch.linspace(self.alpha, self.alpha*(1-self.lbr), len(target))
         else:
-            scores = torch.linspace(self.index_score_upper_bound, self.index_score_upper_bound*(1-self.index_score_lower_bound_rate), len(target))
+            scores = torch.linspace(self.alpha, self.alpha*(1-self.lbr), len(target))
         atom_counts = {a: 0 for a in target}
         for j in range(len(target)):
             try:

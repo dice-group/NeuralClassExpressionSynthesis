@@ -49,8 +49,8 @@ parser.add_argument('--grad_clip_value', type=float, default=5.0, help='Gradient
 parser.add_argument('--opt', type=str, default='Adam', help='Name of the optimizer to use')
 parser.add_argument('--max_num_atom_repeat', type=int, default=8, help='Maximum number of an atom repetition in a given class expression')
 parser.add_argument('--rnn_n_layers', type=int, default=2, help='Number of recurrent network layers')
-parser.add_argument('--index_score_upper_bound', type=float, default=10.0, help='Upper bound for scoring atoms/tokens')
-parser.add_argument('--index_score_lower_bound_rate', type=float, default=0.8, help='Lower bound rate')
+parser.add_argument('--alpha', type=float, default=10.0, help='Upper bound for scoring atoms/tokens')
+parser.add_argument('--lbr', type=float, default=0.8, help='Lower bound rate')
 parser.add_argument('--use_adaptive_bounds', type=str2bool, default=False, help='Whether to rescale the lower and upper bounds based on class expression lengths')
 parser.add_argument('--max_length', type=int, default=32, help='Maximum length of class expressions')
 parser.add_argument('--drop_prob', type=float, default=0.1, help='Dropout rate in neural networks')
@@ -80,14 +80,14 @@ for kb in args.kb:
               "path_to_csv_embeddings": base_path+f"Embeddings/{kb}/ConEx_entity_embeddings.csv",
               "learning_rate": args.lr, "decay_rate": args.decay_rate, 'grad_clip_value': args.grad_clip_value, 
               "path_to_triples": path_to_triples, 'max_num_atom_repeat': args.max_num_atom_repeat,
-              'index_score_upper_bound': args.index_score_upper_bound, 'index_score_lower_bound_rate': args.index_score_lower_bound_rate,
+              'alpha': args.alpha, 'lbr': args.lbr,
               'max_length': args.max_length, 'num_workers': args.num_workers, 'use_adaptive_bounds': args.use_adaptive_bounds,
               "embedding_dim": 20, "num_entities": len(triples.entities),
               "num_relations": len(triples.relations), "num_examples": args.num_examples, 'drop_prob': args.drop_prob,
               "rnn_n_layers": args.rnn_n_layers, 'input_size': 40, 'rnn_n_hidden': args.rnn_n_hidden,
               "proj_dim": args.proj_dim, 'num_inds': args.num_inds, 'num_heads': args.num_heads, 'ln': args.ln, 'num_seeds': args.num_seeds}
 
-    Models = ["SetTransformer"]
+    Models = ["LSTM", "GRU", "SetTransformer"]
 
     experiment = Experiment(kwargs)
 
