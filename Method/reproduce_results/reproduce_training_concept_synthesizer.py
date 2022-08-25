@@ -37,6 +37,7 @@ parser = argparse.ArgumentParser()
 parser.add_argument('--kb', type=str, nargs='+', default=['carcinogenesis'], help='Knowledge base name')
 parser.add_argument('--models', type=str, nargs='+', default=['LSTM', 'GRU', 'SetTransformer'], help='Neural models')
 parser.add_argument('--lr', type=float, default=1e-3, help='Learning rate')
+parser.add_argument('--embedding_dim', type=int, default=40, help='Number of embedding dimensions in TreeTransformer')
 parser.add_argument('--num_workers', type=int, default=8, help='Number of workers to use to load training data')
 parser.add_argument('--rnn_n_hidden', type=int, default=128, help='Hidden size of recurrent neural networks')
 parser.add_argument('--proj_dim', type=int, default=128, help='The projection dimension for examples')
@@ -75,7 +76,7 @@ for kb in args.kb:
     triples = Data({"path_to_triples": path_to_triples})
 
     
-    kwargs = {"learner_name": "", "emb_model_name": "", 'knowledge_base_path': base_path+f"Datasets/{kb}/{kb}.owl",
+    kwargs = {"learner_name": "SetTransformer", "emb_model_name": "", 'knowledge_base_path': base_path+f"Datasets/{kb}/{kb}.owl",
               "pretrained_embedding_path": base_path+f"Datasets/{kb}/Model_weights/ConEx_GRU.pt",
               "pretrained_concept_synthesizer": base_path+f"Datasets/{kb}/Model_weights/GRU.pt", 
               "path_to_csv_embeddings": base_path+f"Embeddings/{kb}/ConEx_entity_embeddings.csv",
@@ -83,7 +84,7 @@ for kb in args.kb:
               "path_to_triples": path_to_triples, 'max_num_atom_repeat': args.max_num_atom_repeat,
               'alpha': args.alpha, 'lbr': args.lbr,
               'max_length': args.max_length, 'num_workers': args.num_workers, 'use_adaptive_bounds': args.use_adaptive_bounds,
-              "embedding_dim": 20, "num_entities": len(triples.entities),
+              "embedding_dim": args.embedding_dim, "num_entities": len(triples.entities),
               "num_relations": len(triples.relations), "num_examples": args.num_examples, 'drop_prob': args.drop_prob,
               "rnn_n_layers": args.rnn_n_layers, 'input_size': 40, 'rnn_n_hidden': args.rnn_n_hidden,
               "proj_dim": args.proj_dim, 'num_inds': args.num_inds, 'num_heads': args.num_heads, 'ln': args.ln, 'num_seeds': args.num_seeds}

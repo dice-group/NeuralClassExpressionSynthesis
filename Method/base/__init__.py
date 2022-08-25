@@ -15,14 +15,15 @@ class BaseConceptSynthesis:
         self.dl_syntax_renderer = DLSyntaxObjectRenderer()
         self.alpha = kwargs['alpha']
         self.lbr = kwargs['lbr']
-        atomic_concepts: Final = frozenset(kb.ontology().classes_in_signature())
-        self.atomic_concept_names: Final = frozenset([self.dl_syntax_renderer.render(a) for a in atomic_concepts])
-        self.role_names: Final = frozenset([rel.get_iri().get_remainder() for rel in kb.ontology().object_properties_in_signature()])
-        vocab = list(self.atomic_concept_names) + list(self.role_names) + ['⊔', '⊓', '∃', '∀', '¬', '⊤', '⊥', '.', ' ', '(', ')']
+        atomic_concepts = list(kb.ontology().classes_in_signature())
+        self.atomic_concept_names = [self.dl_syntax_renderer.render(a) for a in atomic_concepts]
+        self.role_names = [rel.get_iri().get_remainder() for rel in kb.ontology().object_properties_in_signature()]
+        vocab = self.atomic_concept_names + self.role_names + ['⊔', '⊓', '∃', '∀', '¬', '⊤', '⊥', '.', ' ', '(', ')']
+        vocab = sorted(vocab)
         self.inv_vocab = vocab
-        self.vocab = {vocab[i]:i for i in range(len(vocab))}#dict(map(reversed, enumerate(vocab)))
-        self.max_num_atom_repeat: Final[int] = kwargs['max_num_atom_repeat']
-        self.max_length: Final[int] = kwargs['max_length']
+        self.vocab = {vocab[i]:i for i in range(len(vocab))} #dict(map(reversed, enumerate(vocab)))
+        self.max_num_atom_repeat = kwargs['max_num_atom_repeat']
+        self.max_length = kwargs['max_length']
         self.kwargs = kwargs
         
     @property

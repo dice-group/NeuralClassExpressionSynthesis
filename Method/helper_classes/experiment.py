@@ -92,7 +92,7 @@ class Experiment:
             
         
     def map_to_token(self, idx_array):
-        return [self.cs.inv_vocab[idx] for idx in idx_array if idx != -100]
+        return [self.cs.synthesizer.inv_vocab[idx] for idx in idx_array if idx != -100]
     
     def train(self, train_dataloader, test_dataloader, epochs=200, kf_n_splits=10, test=False, save_model = False, optimizer = 'Adam', record_runtime=False, final=False):
         device = torch.device("cuda" if torch.cuda.is_available() else "cpu")

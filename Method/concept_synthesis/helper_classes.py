@@ -1,27 +1,18 @@
 import torch
+import torch.nn as nn
 import sys, os
 base_path = os.path.dirname(os.path.realpath(__file__)).split('concept_synthesis')[0]
 sys.path.append(base_path)
 from concept_synthesis.models import *
 from Embeddings.models import *
 from owlapy.model import OWLNamedIndividual
-from ontolearn.knowledge_base import KnowledgeBase
-from owlapy.render import DLSyntaxObjectRenderer
-from typing import Set, List, Union, Final
+from typing import List, Union
 import pandas as pd
 
 class ConceptSynthesizer:
     def __init__(self, kwargs):
         self.kwargs = kwargs
-        kb = KnowledgeBase(path=kwargs['knowledge_base_path'])
-        self.dl_syntax_renderer = DLSyntaxObjectRenderer()
-        atomic_concepts: Final = frozenset(kb.ontology().classes_in_signature())
-        self.atomic_concept_names: Final = frozenset([self.dl_syntax_renderer.render(a) for a in atomic_concepts])
-        self.role_names: Final = frozenset([rel.get_iri().get_remainder() for rel in kb.ontology().object_properties_in_signature()])
-        vocab = list(self.atomic_concept_names) + list(self.role_names) + ['⊔', '⊓', '∃', '∀', '¬', '⊤', '⊥', '.', ' ', '(', ')']
-        self.inv_vocab = vocab
-        self.vocab = {vocab[i]:i for i in range(len(vocab))}
-        self.learner_name = kwargs['learner_name'] if kwargs['learner_name'] else "DeepSet"
+        self.learner_name = kwargs['learner_name']
         self.synthesizer = self.get_synthesizer()
         self.embeddings = self.get_embedding()
         
@@ -50,18 +41,16 @@ class ConceptSynthesizer:
         return pd.read_csv(self.kwargs['path_to_csv_embeddings']).set_index('Unnamed: 0')
     
     def get_synthesizer(self):
-        self.kwargs['vocab'] = list(self.vocab.keys())
-        self.kwargs['output_size'] = len(self.kwargs['vocab'])
-        if self.learner_name == 'DeepSet':
-            return DeepSet(self.kwargs)
-        elif self.learner_name == 'SetTransformer':
+        #self.kwargs['vocab'] = list(self.vocab.keys())
+        #self.kwargs['output_size'] = len(self.kwargs['vocab'])
+        if self.learner_name == 'SetTransformer':
             return SetTransformer(self.kwargs)
         elif self.learner_name == 'GRU':
             return ConceptLearner_GRU(self.kwargs)
         elif self.learner_name == 'LSTM':
             return ConceptLearner_LSTM(self.kwargs)
-        elif self.learner_name == 'CNN':
-            return ConceptLearner_CNN(self.kwargs)
+        elif self.learner_name == 'TreeTransformer':
+            return TreeTransformer(self.kwargs)
         else:
             print('Wrong concept learner name')
             raise ValueError

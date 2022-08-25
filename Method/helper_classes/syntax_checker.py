@@ -37,36 +37,6 @@ class SyntaxChecker:
         self.tokenizer = PreTrainedTokenizerFast(tokenizer_object=tokenizer)
         self.tokenizer.pad_token = "[PAD]"
         
-    def split(self, atom):
-        if atom in self.atoms:
-            return [atom]
-        piece = ''
-        for j in range(len(atom)):
-            if not piece in self.atoms:
-                piece += atom[j]
-            else:
-                return [piece]+split(atom[j:])
-        return (False, [atom])
-    
-    def split2(self, expression):
-        def longer_atom_exists(a, expression, lookahead = 20, start_index=0):
-            lst = [a+expression[start_index:start_index+i+1] for i in range(lookahead)]
-            booleans = [a+expression[start_index:start_index+i+1] in self.atoms for i in range(lookahead)]
-            return len(set(lst))>1 and any(booleans)
-        pieces = []
-        piece = ''
-        for i in range(len(expression)):
-            a = expression[i]
-            piece += a
-            if piece in self.atoms:
-                try:
-                    if not longer_atom_exists(piece, expression, lookahead=30, start_index=i+1):
-                        pieces.append(piece); piece = ''
-                except IndexError:
-                    pieces.append(piece)
-                    piece = ''
-        return pieces
-
     def preprocess(self, expression:str):    
         spec_chars = ['⊔', '⊓', '∃', '∀', '¬', '⊤', '⊥', '.']
         for char in spec_chars:
