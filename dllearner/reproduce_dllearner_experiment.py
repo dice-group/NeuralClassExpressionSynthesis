@@ -2,7 +2,7 @@ import json, time
 import numpy as np
 from collections import defaultdict
 from tqdm import tqdm
-import os, sys, random
+import os, sys
 from sklearn.model_selection import train_test_split
 
 import urllib.parse
@@ -11,7 +11,7 @@ currentpath = os.path.dirname(os.path.realpath(__file__))
 sys.path.append(currentpath.split("dllearner")[0])
 
 from ontolearn.binders import DLLearnerBinder
-from concept_length_metric import concept_length
+from utils.concept_length import concept_length
 from ontolearn import KnowledgeBase
 
 if __name__ == '__main__':
@@ -21,18 +21,13 @@ if __name__ == '__main__':
     parser.add_argument('--kb', type=str, nargs='+', default=['family-benchmark', 'semantic_bible', 'mutagenesis', 'carcinogenesis', 'vicodi'], \
                        help='The knowledge bases of interest')
     parser.add_argument('--max_runtime', type=int, default=300, help='The maximum runtime of CELOE')
-    parser.add_argument('--num_probs', type=int, default=200, help='The number of learning problems to randomly choose from test set')
     args = parser.parse_args()
     
     for kb in args.kb:
         lp_path = currentpath.split("dllearner")[0]+f"datasets/{kb}/Test_data/Data.json"
         with open(lp_path,"r") as lp_file:
-            data = json.load(lp_file)
-        data = list(data.items())
-        _, data_test = train_test_split(data, test_size=0.2, random_state=123)
-
-        random.seed(142)
-        data_test = random.sample(data_test, args.num_probs)
+            data_test = json.load(lp_file)
+        data_test = list(data_test.items())
 
         kb_path = currentpath.split("dllearner")[0]+f'datasets/{kb}/{kb}.owl'
         # To download DL-learner,  https://github.com/SmartDataAnalytics/DL-Learner/releases.
