@@ -19,7 +19,7 @@ class BaseConceptSynthesis:
         self.atomic_concept_names = [self.dl_syntax_renderer.render(a) for a in atomic_concepts]
         self.role_names = [rel.get_iri().get_remainder() for rel in kb.ontology().object_properties_in_signature()]
         vocab = self.atomic_concept_names + self.role_names + ['⊔', '⊓', '∃', '∀', '¬', '⊤', '⊥', '.', ' ', '(', ')']
-        vocab = sorted(vocab)
+        vocab = sorted(vocab) + ['PAD']
         self.inv_vocab = vocab
         self.vocab = {vocab[i]:i for i in range(len(vocab))} #dict(map(reversed, enumerate(vocab)))
         self.max_num_atom_repeat = kwargs.max_num_atom_repeat
@@ -63,3 +63,9 @@ class BaseConceptSynthesis:
             except IndexError:
                 print('Index out of bound error, ignoring current atom index')
         return target, Scores
+    
+    
+    def get_labels(self, target):
+        target = self.decompose(target)
+        labels = [self.vocab[atm] for atm in target]
+        return labels, len(target)

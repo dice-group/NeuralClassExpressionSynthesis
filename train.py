@@ -33,11 +33,11 @@ def str2bool(v):
         
 parser = argparse.ArgumentParser()
 parser.add_argument('--kbs', type=str, nargs='+', default=['carcinogenesis'], choices=['carcinogenesis', 'mutagenesis', 'semantic_bible', 'vicodi'], help='Knowledge base name')
-parser.add_argument('--models', type=str, nargs='+', default=['LSTM', 'GRU', 'SetTransformer'], help='Neural models')
+parser.add_argument('--models', type=str, nargs='+', default=['SetTransformer', 'LSTM', 'GRU'], help='Neural models')
 parser.add_argument('--learner_name', type=str, default="SetTransformer", choices=['LSTM', 'GRU', 'SetTransformer'], help='Neural model')
 parser.add_argument('--knowledge_base_path', type=str, default="", help='Path to KB owl file')
 parser.add_argument('--path_to_csv_embeddings', type=str, default="", help='KB embedding path')
-parser.add_argument('--learning_rate', type=float, default=1e-3, help='Learning rate')
+parser.add_argument('--learning_rate', type=float, default=1e-4, help='Learning rate')
 parser.add_argument('--embedding_dim', type=int, default=40, help='Number of embedding dimensions')
 parser.add_argument('--input_size', type=int, default=40, help='Number of embedding dimensions in the input')
 parser.add_argument('--num_workers', type=int, default=8, help='Number of workers to use to load training data')
@@ -64,6 +64,7 @@ parser.add_argument('--test', type=str2bool, default=True, help='Whether to eval
 parser.add_argument('--final', type=str2bool, default=False, help='Whether to train the concept synthesizer on test+train data')
 
 args = parser.parse_args()
+print("Setting: ", vars(args))
 
 for kb in args.kbs:
     data_train_path = f"datasets/{kb}/Train_data/Data.json"
@@ -76,18 +77,6 @@ for kb in args.kbs:
         
     args.knowledge_base_path = f"datasets/{kb}/{kb}.owl"
     args.path_to_csv_embeddings = f"embeddings/{kb}/ConEx_entity_embeddings.csv"
-    #kwargs = {"learner_name": "SetTransformer", "emb_model_name": "",
-    #          "pretrained_concept_synthesizer": base_path+f"Datasets/{kb}/Model_weights/GRU.pt", 
-    #          "path_to_csv_embeddings": base_path+f"Embeddings/{kb}/ConEx_entity_embeddings.csv",
-    #          "learning_rate": args.lr, "decay_rate": args.decay_rate, 'grad_clip_value': args.grad_clip_value, 
-    #          "path_to_triples": path_to_triples, 'max_num_atom_repeat': args.max_num_atom_repeat,
-    #          'alpha': args.alpha, 'lbr': args.lbr,
-    #          'max_length': args.max_length, 'num_workers': args.num_workers, 'use_adaptive_bounds': args.use_adaptive_bounds,
-    #          "embedding_dim": args.embedding_dim, "num_entities": len(triples.entities),
-    #          "num_relations": len(triples.relations), "num_examples": args.num_examples, 'drop_prob': args.drop_prob,
-    #          "rnn_n_layers": args.rnn_n_layers, 'input_size': 40, 'rnn_n_hidden': args.rnn_n_hidden,
-    #          "proj_dim": args.proj_dim, 'num_inds': args.num_inds, 'num_heads': args.num_heads, 'ln': args.ln, 'num_seeds': args.num_seeds}
-    
     experiment = Experiment(args)
     setattr(experiment, 'kb', kb)
     data_train, data_test = list(data_train.items()), list(data_test.items())

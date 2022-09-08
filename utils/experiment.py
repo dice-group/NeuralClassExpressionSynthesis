@@ -27,7 +27,6 @@ class Experiment:
         self.decay_rate = kwargs.decay_rate
         self.clip_value = kwargs.grad_clip_value
         self.cs = ConceptSynthesizer(kwargs)
-        self.loss = MSELoss()
         self.num_workers = kwargs.num_workers
             
     def compute_accuracy(self, prediction, target):
@@ -35,16 +34,22 @@ class Experiment:
             arg1_ = arg1
             arg2_ = arg2
             if isinstance(arg1_, str):
-                arg1_ = set(BaseConceptSynthesis.decompose(arg1_))
+                arg1_ = set(BaseConceptSynthesis.decompose(arg1_)) - {'PAD'}
+            else:
+                arg1_ = set(arg1_)
             if isinstance(arg2_, str):
                 arg2_ = set(BaseConceptSynthesis.decompose(arg2_))
+            else:
+                arg2_ = set(arg2_)
             return 100*float(len(arg1_.intersection(arg2_)))/len(arg1_.union(arg2_))
         
         def hard(arg1, arg2):
             arg1_ = arg1
             arg2_ = arg2
             if isinstance(arg1_, str):
-                arg1_ = BaseConceptSynthesis.decompose(arg1_)
+                arg1_ = [atm for atm in BaseConceptSynthesis.decompose(arg1_) if atm != 'PAD']
+            else:
+                arg1_ = [atm for atm in arg1_ if atm != 'PAD']
             if isinstance(arg2_, str):
                 arg2_ = BaseConceptSynthesis.decompose(arg2_)
             return 100*float(sum(map(lambda x,y: x==y, arg1_, arg2_)))/max(len(arg1_), len(arg2_))
@@ -76,22 +81,22 @@ class Experiment:
     def collate_batch(batch):
         pos_emb_list = []
         neg_emb_list = []
-        targets_list = []
         target_tokens_list = []
-        for pos_emb, neg_emb, tg_num, tg in batch:
+        target_labels = []
+        for pos_emb, neg_emb, label in batch:
             pos_emb_list.append(pos_emb)
             neg_emb_list.append(neg_emb)
-            targets_list.append(tg_num)
-            target_tokens_list.append(tg)
+            target_labels.append(label)
         pos_emb_list = pad_sequence(pos_emb_list, batch_first=True, padding_value=0)
         neg_emb_list = pad_sequence(neg_emb_list, batch_first=True, padding_value=0)
-        targets_list = pad_sequence(targets_list, batch_first=True, padding_value=0)
-        target_tokens_list = pad_sequence(target_tokens_list, batch_first=True, padding_value=-100)
-        return pos_emb_list, neg_emb_list, targets_list, target_tokens_list
+        #target_labels = pad_sequence(target_labels, batch_first=True, padding_value=0)
+        target_labels = pad_sequence(target_labels, batch_first=True, padding_value=-100)
+        return pos_emb_list, neg_emb_list, target_labels
             
         
     def map_to_token(self, idx_array):
-        return [self.cs.synthesizer.inv_vocab[idx] for idx in idx_array if idx != -100]
+        return self.cs.synthesizer.inv_vocab[idx_array]
+    #[self.cs.synthesizer.inv_vocab[idx] for idx in idx_array if idx != -100]
     
     def train(self, train_dataloader, test_dataloader, epochs=200, kf_n_splits=10, test=False, save_model = False, optimizer = 'Adam', record_runtime=False, final=False):
         device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
@@ -123,13 +128,13 @@ class Experiment:
         for e in range(epochs):
             soft_acc, hard_acc = [], []
             train_losses = []
-            for x1, x2, y_numerical, target_sequence in tqdm(train_dataloader):
-                target_sequence = np.array(list(map(self.map_to_token, target_sequence)), dtype=object)
+            for x1, x2, labels in tqdm(train_dataloader):
+                target_sequence = self.map_to_token(labels)
                 if(train_on_gpu):
                     #x, y_numerical = x.cuda(), y_numerical.cuda()
-                    x1, x2, y_numerical = x1.cuda(), x2.cuda(), y_numerical.cuda()
-                pred_sequence, scores = synthesizer(x1, x2, y_numerical)
-                cs_loss = self.loss(scores, y_numerical)
+                    x1, x2, labels = x1.cuda(), x2.cuda(), labels.cuda()
+                pred_sequence, scores = synthesizer(x1, x2)
+                cs_loss = synthesizer.loss(scores, labels)
                 s_acc, h_acc = self.compute_accuracy(pred_sequence, target_sequence)
                 soft_acc.append(s_acc); hard_acc.append(h_acc)
                 train_losses.append(cs_loss.item())
@@ -171,11 +176,11 @@ class Experiment:
             print()
             synthesizer.eval()
             soft_acc, hard_acc = [], []
-            for x1, x2, _, target_sequence in test_dataloader:
+            for x1, x2, labels in test_dataloader:
                 if train_on_gpu:
                     x1, x2 = x1.cuda(), x2.cuda()
                 pred_sequence, _ = synthesizer(x1, x2)
-                target_sequence = np.array(list(map(self.map_to_token, target_sequence)), dtype=object)
+                target_sequence = target_sequence = self.map_to_token(labels)
                 s_acc, h_acc = self.compute_accuracy(pred_sequence, target_sequence)
                 soft_acc.append(s_acc); hard_acc.append(h_acc)
             te_soft_acc, te_hard_acc = np.mean(soft_acc), np.mean(hard_acc)
@@ -243,12 +248,12 @@ class Experiment:
             for e in range(epochs):
                 soft_acc, hard_acc = [], []
                 train_losses = []
-                for x1, x2, y_numerical, target_sequence in tqdm(train_dataloader):
-                    target_sequence = np.array(list(map(self.map_to_token, target_sequence)), dtype=object)
+                for x1, x2, labels in tqdm(train_dataloader):
+                    target_sequence = self.map_to_token(labels)
                     if(train_on_gpu):
-                        x1, x2, y_numerical = x1.cuda(), x2.cuda(), y_numerical.cuda()
-                    pred_sequence, scores = synthesizer(x1, x2, y_numerical)
-                    cs_loss = self.loss(scores, y_numerical)
+                        x1, x2, labels = x1.cuda(), x2.cuda(), labels.cuda()
+                    pred_sequence, scores = synthesizer(x1, x2)
+                    cs_loss = synthesizer.loss(scores, y_numerical)
                     s_acc, h_acc = self.compute_accuracy(pred_sequence, target_sequence)
                     soft_acc.append(s_acc); hard_acc.append(h_acc)
                     train_losses.append(cs_loss.item())
@@ -263,12 +268,12 @@ class Experiment:
                 val_losses = []
                 synthesizer.eval()
                 soft_acc, hard_acc = [], []
-                for x1, x2, y_numerical, target_sequence in valid_dataloader:
-                    target_sequence = np.array(list(map(self.map_to_token, target_sequence)), dtype=object)
+                for x1, x2, labels in valid_dataloader:
+                    target_sequence = self.map_to_token(labels)
                     if(train_on_gpu):
-                        x1, x2, y_numerical = x1.cuda(), x2.cuda(), y_numerical.cuda()
+                        x1, x2, labels = x1.cuda(), x2.cuda(), labels.cuda()
                     pred_sequence, scores = synthesizer(x1, x2)
-                    val_loss = self.loss(scores, y_numerical)
+                    val_loss = synthesizer.loss(scores, labels)
                     s_acc, h_acc = self.compute_accuracy(pred_sequence, target_sequence)
                     soft_acc.append(s_acc); hard_acc.append(h_acc)
                     val_losses.append(val_loss.item())
@@ -304,8 +309,8 @@ class Experiment:
             print()
             synthesizer.eval()
             soft_acc, hard_acc = [], []
-            for x1, x2, _, target_sequence in test_dataloader:
-                target_sequence = np.array(list(map(self.map_to_token, target_sequence)), dtype=object)
+            for x1, x2, labels in test_dataloader:
+                target_sequence = self.map_to_token(labels)
                 if train_on_gpu:
                     x1, x2 = x1.cuda(), x2.cuda()
                 pred_sequence, _ = synthesizer(x1, x2)
