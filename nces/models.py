@@ -41,7 +41,7 @@ class ConceptLearner_LSTM(nn.Module):
         x = self.bn(x)
         x = F.relu(self.fc3(x))
         x = x.reshape(-1, len(self.vocab), self.max_len)
-        aligned_chars = self.inv_vocab[x.argmax(1)]
+        aligned_chars = self.inv_vocab[x.argmax(1).cpu()]
         return aligned_chars, x
 
         
@@ -78,7 +78,7 @@ class ConceptLearner_GRU(nn.Module):
         x = self.bn(x)
         x = F.relu(self.fc3(x))
         x = x.reshape(-1, len(self.vocab), self.max_len)
-        aligned_chars = self.inv_vocab[x.argmax(1)]
+        aligned_chars = self.inv_vocab[x.argmax(1).cpu()]
         return aligned_chars, x
 
     
@@ -112,7 +112,7 @@ class SetTransformer(nn.Module):
         x2 = self.enc(x2)
         x = torch.cat([x1,x2], -2)
         x = self.dec(x).reshape(-1, len(self.vocab), self.max_len)
-        aligned_chars = self.inv_vocab[x.argmax(1)]
+        aligned_chars = self.inv_vocab[x.argmax(1).cpu()]
         return aligned_chars, x
 
     
