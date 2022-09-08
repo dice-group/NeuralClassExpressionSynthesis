@@ -153,7 +153,7 @@ class Experiment:
                   "Train soft acc: {:.2f}%...".format(tr_soft_acc),
                   "Train hard acc: {:.2f}%...".format(tr_hard_acc))
             if np.random.rand() > 0.7:
-                print("Visualizing some prediction: ", np.random.choice(pred_sequence))
+                print("Visualizing some prediction: ", pred_sequence[np.random.choice(range(x1.shape[0]))])
                 print()
             weights_cs = copy.deepcopy(synthesizer.state_dict())
             if Train_acc['soft'] and Train_acc['soft'][-1] > best_score:
