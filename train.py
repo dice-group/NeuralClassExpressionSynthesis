@@ -66,6 +66,9 @@ parser.add_argument('--final', type=str2bool, default=False, help='Whether to tr
 args = parser.parse_args()
 print("Setting: ", vars(args))
 
+with open("settings.json", "w") as setting:
+    json.dump(vars(args), setting)
+
 for kb in args.kbs:
     data_train_path = f"datasets/{kb}/Train_data/Data.json"
     with open(data_train_path, "r") as file:

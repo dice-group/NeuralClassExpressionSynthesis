@@ -2,8 +2,8 @@ import torch, torch.nn as nn, numpy as np
 import torch.nn.functional as F
 from .modules import *
 import sys, os
-base_path = os.path.dirname(os.path.realpath(__file__)).split('concept_synthesis')[0]
-sys.path.append(base_path)
+#base_path = os.path.dirname(os.path.realpath(__file__)).split('concept_synthesis')[0]
+#sys.path.append(base_path)
 from ontolearn.knowledge_base import KnowledgeBase
 from owlapy.render import DLSyntaxObjectRenderer
 import pandas as pd
@@ -153,36 +153,4 @@ class TreeTransformer(nn.Module):
                 nn.Linear(kwargs.proj_dim, len(self.vocab)))
         
     def forward(self, x1, x2, target_scores=None):
-        x1 = self.encoder(x1)
-        x2 = self.encoder(x2)
-        x = torch.cat([x1,x2], -2)
-        x = self.dec(x).reshape(-1, len(self.vocab), self.kwargs.max_num_atom_repeat)
-        values, sorted_indices = x.flatten(start_dim=1,end_dim=-1).sort(descending=True)
-        aligned_chars = []
-        if target_scores is None:
-            for i in range(sorted_indices.shape[0]):
-                num_select = max(1,(x[i]>=0.9*self.kwargs.alpha*(1-self.kwargs.lbr)).sum().item())
-                atoms = []
-                stop = 0
-                while stop < num_select:
-                    v = values[i][stop]
-                    try:
-                        atoms.append(self.vocab[(x[i]==v).nonzero().squeeze()[0].item()])
-                    except ValueError:
-                        atoms.append(self.vocab[(x[i]==v).nonzero().squeeze()[0][0].item()])
-                    stop += 1
-                aligned_chars.append(np.array(atoms, dtype=object).sum())
-        else:
-            for i in range(sorted_indices.shape[0]):
-                num_select = max(1,(x[i]>0.9*min(target_scores[i][target_scores[i]!=0.])).sum().item())
-                atoms = []
-                stop = 0
-                while stop < num_select:
-                    v = values[i][stop]
-                    try:
-                        atoms.append(self.vocab[(x[i]==v).nonzero().squeeze()[0].item()])
-                    except ValueError:
-                        atoms.append(self.vocab[(x[i]==v).nonzero().squeeze()[0][0].item()])
-                    stop += 1
-                aligned_chars.append(np.array(atoms, dtype=object).sum())
-        return aligned_chars, x
+        raise NotImplementedError

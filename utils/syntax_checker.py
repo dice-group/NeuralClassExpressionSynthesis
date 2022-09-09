@@ -211,49 +211,6 @@ class SyntaxChecker:
             possible_exprs.append(Expr)
         yield from possible_exprs
 
-    def recursive_concept_constructor(self, expression_list:list):
-        if len(expression_list) == 1:
-            assert expression_list[0] in self.atomic_concept_names.union({'⊤', '⊥'})
-            return [self.concept_str_to_concept[expression_list[0]]]
-        if expression_list[0] == '∃':
-            assert expression_list[1] in self.role_names and expression_list[2] == '.' and expression_list[3] in self.atomic_concept_names.union({'⊤', '⊥', '¬', '∃', '∀'}), 'Invalid class expression'
-            if expression_list[3] in ['∃', '∀']:
-                filler = self.recursive_concept_constructor(expression_list[3:7])[0]
-            elif expression_list[3] == '¬':
-                filler = self.recursive_concept_constructor(expression_list[3:5])[0]
-            else:
-                filler = self.concept_str_to_concept[expression_list[3]]
-            prop = self.role_str_to_role[expression_list[1]]
-            if len(expression_list)>4 and not expression_list[3] in ['∃', '∀']:
-                return [self.knowledge_base.existential_restriction(filler, prop)] + self.recursive_concept_constructor(expression_list[4:])
-            elif len(expression_list)<=4:
-                return [self.knowledge_base.existential_restriction(filler, prop)]
-            elif expression_list[3] in ['∃', '∀']:
-                return [self.knowledge_base.existential_restriction(filler, prop)] + self.recursive_concept_constructor(expression_list[7:])
-        if expression_list[0] == '∀':
-            assert expression_list[1] in self.role_names and expression_list[2] == '.' and expression_list[3] in self.atomic_concept_names.union({'⊤', '⊥'}), 'Invalid class expression'
-            if expression_list[3] in ['∃', '∀']:
-                filler = self.recursive_concept_constructor(expression_list[3:7])[0]
-            elif expression_list[3] == '¬':
-                filler = self.recursive_concept_constructor(expression_list[3:5])[0]
-            else:
-                filler = self.concept_str_to_concept[expression_list[3]]
-            prop = self.role_str_to_role[expression_list[1]]
-            if len(expression_list)>4 and not expression_list[3] in ['∃', '∀']:
-                return [self.knowledge_base.universal_restriction(filler, prop)] + self.recursive_concept_constructor(expression_list[4:])
-            elif len(expression_list)<=4:
-                return [self.knowledge_base.universal_restriction(filler, prop)]
-            elif expression_list[3] in ['∃', '∀']:
-                return [self.knowledge_base.universal_restriction(filler, prop)] + self.recursive_concept_constructor(expression_list[7:])
-        if expression_list[0] in ['⊔', '⊓']:
-            assert len(expression_list) > 1, 'Invalid class expression'
-            return self.recursive_concept_constructor(expression_list[1:])
-        if len(expression_list)>1 and expression_list[0] in self.atomic_concept_names.union({'⊤', '⊥'}):
-            return [self.concept_str_to_concept[expression_list[0]]] + self.recursive_concept_constructor(expression_list[1:])
-        if expression_list[0] == '¬':
-            assert len(expression_list)>1 and expression_list[1] in self.atomic_concept_names.union({'⊤', '⊥'}), 'Invalid class expression'
-            return [self.knowledge_base.negation(expression_list[1])] + self.recursive_concept_constructor(expression_list[2:])
-        raise ValueError
         
     def get_concept(self, expression_list:list):
         def disj_conj_concept_builder(atom_list):
@@ -331,37 +288,6 @@ class SyntaxChecker:
                     
             
     def concept(self, expression: str):
-#        def get_conjunctions(components_list, joins):
-#            i = 0
-#            conjunctions = []
-#            while i<len(joins)+1:
-#                j = i
-#                conj = [components_list[j]]
-#                while j<len(joins) and joins[j] == '⊓':
-#                    conj += [components_list[j+1]]
-#                    j += 1
-#                if len(conj) == 1:
-#                    conjunctions.append(conj[0])
-#                else:
-#                    conjunctions.append(self.knowledge_base.intersection(conj))
-#                i = j+1
-#            return conjunctions
-#        def get_disjunctions(components_list, joins):
-#            i = 0
-#            disjunctions = []
-#            while i<len(joins)+1:
-#                j = i
-#                disj = [components_list[j]]
-#                while j<len(joins) and joins[j] == '⊔':
-#                    disj += [components_list[j+1]]
-#                    j += 1
-#                if len(disj) == 1:
-#                    disjunctions.append(disj[0])
-#                else:
-#                    disjunctions.append(self.knowledge_base.union(disj))
-#                i = j+1
-#            return disjunctions
-
         list_atoms = self.correct(expression)
         ce = list(self.get_suggestions(list_atoms))[-1]
         return self.get_concept(ce)
@@ -370,20 +296,5 @@ class SyntaxChecker:
         #    self.class_expressions += [ce]
         #return self
     
-    def evaluate(self, prediction, pos_examples, neg_examples, verbose = True):
-        all_individuals = set(self.knowledge_base.individuals())
-        ce = self.concept(prediction)
-        #for ce in self.class_expressions:
-        instances ={ind.get_iri().as_str().split("/")[-1] for ind in self.knowledge_base.individuals(ce)}
-        #instances += [{ind.get_iri().as_str().split("/")[-1] for ind in self.knowledge_base.individuals(self.class_expression[1])}]
-        f1 = F1.score(set(pos_examples), instances)
-        acc = Accuracy.score(set(pos_examples), set(neg_examples), instances, all_individuals)
-        #acc = [Accuracy.score(set(pos_examples), instances, all_individuals) for instances in Instances]
-        class_expression = self.renderer.render(ce)
-        if verbose:
-            print('\n****************************')
-            print("Prediction: {}, Acc: {}%, F1: {}%".format(class_expression, 100*acc, 100*f1))
-            print('****************************')
-            
-        return class_expression, 100*acc, 100*f1
+    
     

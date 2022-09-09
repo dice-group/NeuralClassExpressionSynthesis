@@ -2,7 +2,8 @@ from rdflib import graph
 import os
 
 class RDFTriples:
-    """The knowledge graph/base is converted into triples of the form: individual_i ---role_j---> concept_k and stored in a txt file for the computation of embeddings."""
+    """The knowledge graph/base is converted into triples of the form: individual_i ---role_j---> concept_k or individual_i ---role_j---> individual_k
+    and stored in a txt file for the computation of embeddings."""
     
     def __init__(self, source_kg_path):
         self.Graph = graph.Graph()

@@ -52,6 +52,8 @@ class Experiment:
                 arg1_ = [atm for atm in arg1_ if atm != 'PAD']
             if isinstance(arg2_, str):
                 arg2_ = BaseConceptSynthesis.decompose(arg2_)
+            else:
+                arg2_ = [atm for atm in arg2_ if atm != 'PAD']
             return 100*float(sum(map(lambda x,y: x==y, arg1_, arg2_)))/max(len(arg1_), len(arg2_))
         soft_acc = sum(map(soft, prediction, target))/len(target)
         hard_acc = sum(map(hard, prediction, target))/len(target)
@@ -215,7 +217,7 @@ class Experiment:
         print()
         print("#"*50)
         print()
-        print("{} starts training on {} data set \n".format(self.cs.synthesizer.name, self.kwargs.path_to_triples.split("/")[-3]))
+        print("{} starts training on {} data set \n".format(self.cs.synthesizer.name, self.kb))
         print("#"*50, "\n")
         from sklearn.model_selection import KFold
         Kf = KFold(n_splits=kf_n_splits, shuffle=True, random_state=142)
@@ -381,7 +383,7 @@ class Experiment:
                 self.cs.learner_name = net
                 self.cs.refresh()
                 train_soft_acc, train_hard_acc, val_soft_acc, val_hard_acc, train_l, val_l = self.train_and_eval(train_data, test_dataloader, epochs, batch_size, kf_n_splits, cross_validate, test, save_model, optimizer, record_runtime, final)
-                with open(self.kwargs.path_to_triples.split("Triples")[0]+f"Plot_data/{net}_plot_data_with_val.json", "w") as plot_file:
+                with open(base_path+f"datasets/{self.kb}/Plot_data/{net}_plot_data_with_val.json", "w") as plot_file:
                     json.dump({'train': {"soft acc": list(train_soft_acc), "hard acc": list(train_hard_acc), "loss": list(train_l)},
                                'val': {"soft acc": list(val_soft_acc), "hard acc": list(val_hard_acc), "loss": list(val_l)}},
                                 plot_file, indent=3)
@@ -393,7 +395,7 @@ class Experiment:
                 print('Learner: ', self.cs.learner_name)
                 self.cs.refresh()
                 train_soft_acc, train_hard_acc, train_l = self.train_and_eval(train_dataloader, test_dataloader, epochs, batch_size, kf_n_splits, cross_validate, test, save_model, optimizer, record_runtime, final)
-                with open(self.kwargs.path_to_triples.split("Triples")[0]+f"Plot_data/{net}_plot_data.json", "w") as plot_file:
+                with open(base_path+f"datasets/{self.kb}/Plot_data/{net}_plot_data.json", "w") as plot_file:
                     json.dump({"soft acc": list(train_soft_acc), "hard acc": list(train_hard_acc), "loss": list(train_l)}, plot_file, indent=3)
 
             
