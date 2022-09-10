@@ -1,0 +1,7 @@
+{
+   "Test soft acc": 77.71643322663732,
+   "Test hard acc": 81.10801896516179,
+   "Train Max Soft Acc": 87.65363367858335,
+   "Train Max Hard Acc": 89.50573829830651,
+   "Train Min Loss": 0.08763774994172548
+}
