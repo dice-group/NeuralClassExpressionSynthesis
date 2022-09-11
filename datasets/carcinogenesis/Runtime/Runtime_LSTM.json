@@ -1,5 +1,5 @@
 {
    "Concept synthesizer": "LSTM",
-   "Number of Epochs": 200,
-   "Runtime (s)": 863.1369068622589
+   "Number of Epochs": 500,
+   "Runtime (s)": 2146.0688519477844
 }
