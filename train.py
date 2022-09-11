@@ -42,7 +42,7 @@ parser.add_argument('--embedding_dim', type=int, default=40, help='Number of emb
 parser.add_argument('--input_size', type=int, default=40, help='Number of embedding dimensions in the input')
 parser.add_argument('--num_workers', type=int, default=8, help='Number of workers to use to load training data')
 parser.add_argument('--proj_dim', type=int, default=128, help='The projection dimension for examples')
-parser.add_argument('--num_inds', type=int, default=32, help='Number of induced instances')
+parser.add_argument('--num_inds', type=int, default=128, help='Number of induced instances')
 parser.add_argument('--num_heads', type=int, default=4, help='Number of attention heads')
 parser.add_argument('--num_seeds', type=int, default=1, help='Number of seed components in the output')
 parser.add_argument('--num_examples', type=int, default=1000, help='Total number of examples for concept learning')
