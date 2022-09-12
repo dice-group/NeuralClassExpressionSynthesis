@@ -9,8 +9,12 @@ import random, os, copy, json
 from typing import Final
 from owlapy.render import DLSyntaxObjectRenderer
 from sklearn.utils import resample
+from tqdm import tqdm
 
-random.seed(1)
+from sklearn.model_selection import train_test_split
+
+random.seed(42)
+
 class KBToDataForConceptSynthesis:
     """
     This class takes an owl file, loads it into a knowledge base using ontolearn.knowledge_base.KnowledgeBase.
@@ -43,7 +47,7 @@ class KBToDataForConceptSynthesis:
         Concepts = self.lp_gen.generate()
         non_redundancy_hash_map = dict()
         show_some_length = True
-        for concept in sorted(Concepts, key=lambda c: self.kb.cl(c)):
+        for concept in sorted(Concepts, key=lambda c: self.kb.concept_len(c)):
             if not self.kb.individuals_set(concept) in non_redundancy_hash_map and self.min_num_pos_examples <= self.kb.individuals_count(concept) <= self.max_num_pos_examples:
                 non_redundancy_hash_map[self.kb.individuals_set(concept)] = concept
             else: continue
@@ -61,19 +65,42 @@ class KBToDataForConceptSynthesis:
 
     def save_train_data(self):
         data = dict()
-        for concept in self.train_concepts:
-            pos = [ind.get_iri().as_str().split("/")[-1] for ind in self.kb.individuals(concept)]
-            if len(pos) < self.num_examples:
-                pos = resample(pos, replace=True, n_samples=self.num_examples, random_state=123)
+        for concept in tqdm(self.train_concepts):
+            pos = set(self.kb.individuals(concept))
+            neg = set(self.kb.individuals())-pos
+            pos = [ind.get_iri().as_str().split("/")[-1] for ind in pos]
+            neg = [ind.get_iri().as_str().split("/")[-1] for ind in neg]
+            if min(len(neg),len(pos)) >= self.num_examples//2:
+                if len(pos) > len(neg):
+                    num_neg_ex = self.num_examples//2
+                    num_pos_ex = self.num_examples-num_neg_ex
+                else:
+                    num_pos_ex = self.num_examples//2
+                    num_neg_ex = self.num_examples-num_pos_ex
+            elif len(pos) > len(neg):
+                num_neg_ex = len(neg)
+                num_pos_ex = self.num_examples-num_neg_ex
+            elif len(pos) < len(neg):
+                num_pos_ex = len(pos)
+                num_neg_ex = self.num_examples-num_pos_ex
             else:
-                pos = random.sample(pos, k=self.num_examples)
+                continue
+            positive = random.sample(pos, num_pos_ex)
+            negative = random.sample(neg, num_neg_ex)
+            
             concept_name = self.dl_syntax_renderer.render(concept.get_nnf())
-            concept_length = self.kb.cl(concept)
-            data[concept_name] = {'positive examples': pos, 'concept length': concept_length}
-        if not os.path.exists('/'+("/").join(self.path.split("/")[1:-1])+"/"+"Train_data/"):
-            os.mkdir('/'+("/").join(self.path.split("/")[1:-1])+"/"+"Train_data/")
-        with open('/'+("/").join(self.path.split("/")[1:-1])+"/"+"Train_data/Data.json", 'w') as file_descriptor:
-            json.dump(data, file_descriptor, ensure_ascii=False, indent=3)
+            data[concept_name] = {'positive examples': positive, 'negative examples': negative}
+            
+        data = list(data.items())
+        data_train, data_test = train_test_split(data, test_size=0.01, random_state=42)
+        os.makedirs('/'+("/").join(self.path.split("/")[1:-1])+'/Train_data/', exist_ok=True)
+        os.makedirs('/'+("/").join(self.path.split("/")[1:-1])+'/Test_data/', exist_ok=True)
+        with open(f'Method/Datasets/{kb}/Test_data/Data.json', 'w') as file_test:
+            json.dump(dict(data_test), file_test, indent=3, ensure_ascii=False)
+
+        with open(f'Method/Datasets/{kb}/Train_data/Data.json', 'w') as file_train:
+            json.dump(dict(data_train), file_train, indent=3, ensure_ascii=False)
+
         print("Data saved at %s"% "/"+("/").join(self.path.split("/")[1:-1]))
               
             

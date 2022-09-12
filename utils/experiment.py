@@ -30,17 +30,18 @@ class Experiment:
         self.num_workers = kwargs.num_workers
             
     def compute_accuracy(self, prediction, target):
+        print("In accuracy score, Pred: {}, Target: {}".format(prediction[0], target[0]))
         def soft(arg1, arg2):
             arg1_ = arg1
             arg2_ = arg2
             if isinstance(arg1_, str):
                 arg1_ = set(BaseConceptSynthesis.decompose(arg1_)) - {'PAD'}
             else:
-                arg1_ = set(arg1_)
+                arg1_ = set(arg1_) - {'PAD'}
             if isinstance(arg2_, str):
                 arg2_ = set(BaseConceptSynthesis.decompose(arg2_))
             else:
-                arg2_ = set(arg2_)
+                arg2_ = set(arg2_) - {'PAD'}
             return 100*float(len(arg1_.intersection(arg2_)))/len(arg1_.union(arg2_))
         
         def hard(arg1, arg2):
@@ -51,7 +52,7 @@ class Experiment:
             else:
                 arg1_ = [atm for atm in arg1_ if atm != 'PAD']
             if isinstance(arg2_, str):
-                arg2_ = BaseConceptSynthesis.decompose(arg2_)
+                arg2_ = [atm for atm in BaseConceptSynthesis.decompose(arg2_) if atm != 'PAD']
             else:
                 arg2_ = [atm for atm in arg2_ if atm != 'PAD']
             return 100*float(sum(map(lambda x,y: x==y, arg1_, arg2_)))/max(len(arg1_), len(arg2_))
