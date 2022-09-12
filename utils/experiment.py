@@ -30,7 +30,6 @@ class Experiment:
         self.num_workers = kwargs.num_workers
             
     def compute_accuracy(self, prediction, target):
-        print("In accuracy score, Pred: {}, Target: {}".format(prediction[0], target[0]))
         def soft(arg1, arg2):
             arg1_ = arg1
             arg2_ = arg2
