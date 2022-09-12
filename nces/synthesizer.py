@@ -41,7 +41,6 @@ class ConceptSynthesizer:
         self.synthesizer.eval()
         
     def predict(self, pos: Union[List[OWLNamedIndividual], List[str]], neg: Union[List[OWLNamedIndividual], List[str]]):
-        self.load_pretrained()
         if isinstance(pos[0], OWLNamedIndividual):
             pos = [ind.get_iri().as_str().split("/")[-1] for ind in pos]
             neg = [ind.get_iri().as_str().split("/")[-1] for ind in neg]

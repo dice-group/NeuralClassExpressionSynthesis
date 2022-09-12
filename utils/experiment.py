@@ -158,8 +158,8 @@ class Experiment:
                 print("Visualizing some prediction: ", pred_sequence[np.random.choice(range(x1.shape[0]))])
                 print()
             weights_cs = copy.deepcopy(synthesizer.state_dict())
-            if Train_acc['soft'] and Train_acc['soft'][-1] > best_score:
-                best_score = Train_acc['soft'][-1]
+            if Train_acc['hard'] and Train_acc['hard'][-1] > best_score:
+                best_score = Train_acc['hard'][-1]
                 best_weights_cs = weights_cs
         synthesizer.load_state_dict(best_weights_cs)
         if record_runtime:
@@ -295,8 +295,8 @@ class Experiment:
                       "Val soft acc: {:.2f}%...".format(val_soft_acc),
                       "Val hard acc: {:.2f}%".format(val_hard_acc))
                 weights_cs = copy.deepcopy(synthesizer.state_dict())
-                if Val_acc['soft'] and max(Val_acc['soft']) > best_val_score:
-                    best_val_score = max(Val_acc['soft'])
+                if Val_acc['hard'] and max(Val_acc['hard']) > best_val_score:
+                    best_val_score = max(Val_acc['hard'])
                     best_weights_cs = weights_cs
                 All_losses["train"].append(Train_losses)
                 All_losses["val"].append(Val_losses)
@@ -361,11 +361,9 @@ class Experiment:
         if cross_validate:
             return self.cross_validate(train_data, test_data, epochs, batch_size,
                                        kf_n_splits, test, save_model, optimizer, record_runtime, final)
-
         else:
             return self.train(train_data, test_data, epochs,
                     kf_n_splits, test, save_model, optimizer, record_runtime, final)
-            
             
     def train_all_nets(self, List_nets, train_data, test_data, epochs=200, batch_size=64, kf_n_splits=10, cross_validate=False, test=False, save_model = False, optimizer = 'Adam', record_runtime=False, final=False):
         self.embeddings = self.cs.get_embedding()

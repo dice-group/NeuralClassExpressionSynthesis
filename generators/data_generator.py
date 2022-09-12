@@ -51,12 +51,12 @@ class KBToDataForConceptSynthesis:
             if not self.kb.individuals_set(concept) in non_redundancy_hash_map and self.min_num_pos_examples <= self.kb.individuals_count(concept) <= self.max_num_pos_examples:
                 non_redundancy_hash_map[self.kb.individuals_set(concept)] = concept
             else: continue
-            if self.kb.cl(concept) >= 15 and show_some_length:
-                print("A long concept found: ", self.kb.cl(concept))
+            if self.kb.concept_len(concept) >= 15 and show_some_length:
+                print("A long concept found: ", self.kb.concept_len(concept))
                 show_some_length = False
         print("Concepts generation done!\n")
         print("Number of atomic concepts: ", len(self.atomic_concept_names))
-        print("Longest concept length: ", max({l for l in [self.kb.cl(c) for c in non_redundancy_hash_map.values()]}), "\n")
+        print("Longest concept length: ", max({l for l in [self.kb.concept_len(c) for c in non_redundancy_hash_map.values()]}), "\n")
         print("Total number of concepts: ", len(non_redundancy_hash_map), "\n")
         self.train_concepts = list(non_redundancy_hash_map.values())
         print("Data generation completed")
