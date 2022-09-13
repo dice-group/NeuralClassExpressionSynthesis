@@ -1,0 +1,144 @@
+{
+   "SetTransformer": {
+      "acc": {
+         "values": [
+            100.0,
+            47.354,
+            0.0,
+            35.271,
+            0.0,
+            76.415,
+            37.5,
+            77.885,
+            19.355,
+            6.4719999999999995,
+            11.429,
+            0.0,
+            4.5,
+            74.074,
+            2.878,
+            3.8649999999999998,
+            60.0,
+            0.5950000000000001,
+            2.163,
+            4.688,
+            74.747,
+            0.0,
+            17.647,
+            36.364000000000004,
+            9.524000000000001,
+            93.258
+         ],
+         "mean": [
+            30.614769230769234
+         ],
+         "std": [
+            32.89981842515676
+         ]
+      },
+      "prediction": {
+         "values": [
+            "City ⊔ EthnicityAttribute ⊔ Group",
+            "Man ⊔ Woman",
+            "BeliefGroup ⊔ Character ⊔ GeopoliticalArea",
+            "GeopoliticalArea ⊔ Human",
+            "(FreshWaterArea ⊔ ContentBearingObject ⊔ EthnicityAttribute) ⊓ Woman ⊓ CitizenshipAttribute",
+            "SupernaturalBeing ⊔ City",
+            "SupernaturalBeing",
+            "City ⊔ WaterArea ⊔ FreshWaterArea",
+            "FreshWaterArea ⊔ EthnicityAttribute",
+            "FreshWaterArea ⊔ GeopoliticalArea ⊔ GeographicArea",
+            "FreshWaterArea ⊔ ContentBearingObject ⊔ Woman",
+            "FreshWaterArea ⊔ LandArea",
+            "GeopoliticalArea ⊔ Group ⊔ EthnicityAttribute",
+            "FreshWaterArea ⊔ ResidenceGroup ⊔ PoliticalOrganization",
+            "GeopoliticalArea ⊔ Tribe ⊔ BeliefGroup",
+            "EthnicityAttribute ⊔ CognitiveAgent",
+            "EthnicityAttribute ⊔ Character",
+            "Region",
+            "Island ⊔ Man",
+            "BeliefSystem ⊔ GeopoliticalArea ⊔ Angel",
+            "City ⊔ Angel",
+            "∃ ethnicity.(Region ⊔ BeliefGroup)",
+            "FreshWaterArea",
+            "EthnicityAttribute ⊔ Group",
+            "FreshWaterArea ⊔ ContentBearingObject ⊔ Angel",
+            "Organization ⊔ Region ⊔ Tribe"
+         ]
+      },
+      "f1": {
+         "values": [
+            100.0,
+            64.273,
+            0.0,
+            52.148,
+            0.0,
+            86.631,
+            54.545,
+            87.568,
+            32.432,
+            12.158,
+            20.513,
+            0.0,
+            8.612,
+            85.10600000000001,
+            5.593999999999999,
+            7.442,
+            75.0,
+            1.183,
+            4.234999999999999,
+            8.955,
+            85.54899999999999,
+            0.0,
+            30.0,
+            53.333,
+            17.391000000000002,
+            96.512
+         ],
+         "mean": [
+            38.04538461538462
+         ],
+         "std": [
+            35.51480161639751
+         ]
+      },
+      "time": {
+         "values": [
+            0.03277158737182617,
+            0.0384984016418457,
+            0.0320742130279541,
+            0.029451847076416016,
+            0.036896467208862305,
+            0.03537130355834961,
+            0.0256500244140625,
+            0.029231548309326172,
+            0.0251007080078125,
+            0.028922080993652344,
+            0.024786710739135742,
+            0.027109146118164062,
+            0.024478912353515625,
+            0.024269819259643555,
+            0.0257718563079834,
+            0.029967784881591797,
+            0.023362398147583008,
+            0.026129961013793945,
+            0.02435779571533203,
+            0.02385711669921875,
+            0.023773193359375,
+            0.03212738037109375,
+            0.02279806137084961,
+            0.024575233459472656,
+            0.024484634399414062,
+            0.029780149459838867
+         ],
+         "mean": [
+            0.027907628279465895
+         ],
+         "std": [
+            0.004350803405972634
+         ]
+      }
+   },
+   "LSTM": {},
+   "GRU": {}
+}
