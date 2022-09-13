@@ -2,143 +2,329 @@
    "SetTransformer": {
       "acc": {
          "values": [
+            98.198,
+            99.71600000000001,
+            99.72999999999999,
+            99.05000000000001,
+            98.649,
+            95.126,
+            97.855,
+            99.1,
+            98.787,
+            97.989,
+            99.59,
+            99.603,
+            98.143,
+            99.744,
+            99.454,
+            98.509,
+            99.603,
             100.0,
-            47.354,
-            0.0,
-            35.271,
-            0.0,
-            76.415,
-            37.5,
-            77.885,
-            19.355,
-            6.4719999999999995,
-            11.429,
-            0.0,
-            4.5,
-            74.074,
-            2.878,
-            3.8649999999999998,
-            60.0,
-            0.5950000000000001,
-            2.163,
-            4.688,
-            74.747,
-            0.0,
-            17.647,
-            36.364000000000004,
-            9.524000000000001,
-            93.258
+            98.989
          ],
          "mean": [
-            30.614769230769234
+            98.83342105263158
          ],
          "std": [
-            32.89981842515676
+            1.0880753319406868
          ]
       },
       "prediction": {
          "values": [
-            "City ⊔ EthnicityAttribute ⊔ Group",
-            "Man ⊔ Woman",
-            "BeliefGroup ⊔ Character ⊔ GeopoliticalArea",
-            "GeopoliticalArea ⊔ Human",
-            "(FreshWaterArea ⊔ ContentBearingObject ⊔ EthnicityAttribute) ⊓ Woman ⊓ CitizenshipAttribute",
-            "SupernaturalBeing ⊔ City",
-            "SupernaturalBeing",
-            "City ⊔ WaterArea ⊔ FreshWaterArea",
-            "FreshWaterArea ⊔ EthnicityAttribute",
-            "FreshWaterArea ⊔ GeopoliticalArea ⊔ GeographicArea",
-            "FreshWaterArea ⊔ ContentBearingObject ⊔ Woman",
-            "FreshWaterArea ⊔ LandArea",
-            "GeopoliticalArea ⊔ Group ⊔ EthnicityAttribute",
-            "FreshWaterArea ⊔ ResidenceGroup ⊔ PoliticalOrganization",
-            "GeopoliticalArea ⊔ Tribe ⊔ BeliefGroup",
-            "EthnicityAttribute ⊔ CognitiveAgent",
-            "EthnicityAttribute ⊔ Character",
-            "Region",
-            "Island ⊔ Man",
-            "BeliefSystem ⊔ GeopoliticalArea ⊔ Angel",
-            "City ⊔ Angel",
-            "∃ ethnicity.(Region ⊔ BeliefGroup)",
-            "FreshWaterArea",
-            "EthnicityAttribute ⊔ Group",
-            "FreshWaterArea ⊔ ContentBearingObject ⊔ Angel",
-            "Organization ⊔ Region ⊔ Tribe"
+            "City ⊔ Group ⊔ Group",
+            "Man ⊔ Man",
+            "CognitiveAgent ⊔ Human",
+            "Angel ⊔ FreshWaterArea ⊔ SonOfGod",
+            "FreshWaterArea ⊔ FreshWaterArea ⊔ SupernaturalRegion",
+            "EthnicGroup ⊔ Man",
+            "FreshWaterArea ⊔ FreshWaterArea ⊔ PoliticalOrganization",
+            "Human ⊔ ReligiousBelief",
+            "Organization ⊔ Organization",
+            "FreshWaterArea ⊔ FreshWaterArea ⊔ SonOfGod",
+            "ReligiousOrganization ⊔ ReligiousOrganization",
+            "BeliefGroup ⊔ EthnicityAttribute ⊔ WaterArea",
+            "EthnicityAttribute ⊔ EthnicityAttribute",
+            "Agent ⊔ CognitiveAgent",
+            "ReligiousBeliefSystem ⊔ ReligiousBeliefSystem",
+            "∃ subregionOf.Nation",
+            "EthnicityAttribute ⊔ EthnicityAttribute ⊔ Tribe",
+            "FreshWaterArea ⊔ Woman",
+            "Region ⊔ Region"
          ]
       },
       "f1": {
          "values": [
-            100.0,
-            64.273,
-            0.0,
-            52.148,
-            0.0,
-            86.631,
+            94.872,
+            99.548,
+            99.612,
+            63.158,
             54.545,
-            87.568,
-            32.432,
-            12.158,
-            20.513,
-            0.0,
-            8.612,
-            85.10600000000001,
-            5.593999999999999,
-            7.442,
-            75.0,
-            1.183,
-            4.234999999999999,
-            8.955,
-            85.54899999999999,
-            0.0,
-            30.0,
-            53.333,
-            17.391000000000002,
-            96.512
+            92.437,
+            42.857,
+            98.691,
+            66.667,
+            48.276,
+            72.727,
+            95.082,
+            69.565,
+            99.663,
+            71.429,
+            35.294,
+            94.915,
+            100.0,
+            97.214
          ],
          "mean": [
-            38.04538461538462
+            78.7658947368421
          ],
          "std": [
-            35.51480161639751
+            21.42941096249372
          ]
       },
       "time": {
          "values": [
-            0.03277158737182617,
-            0.0384984016418457,
-            0.0320742130279541,
-            0.029451847076416016,
-            0.036896467208862305,
-            0.03537130355834961,
-            0.0256500244140625,
-            0.029231548309326172,
-            0.0251007080078125,
-            0.028922080993652344,
-            0.024786710739135742,
-            0.027109146118164062,
-            0.024478912353515625,
-            0.024269819259643555,
-            0.0257718563079834,
-            0.029967784881591797,
-            0.023362398147583008,
-            0.026129961013793945,
-            0.02435779571533203,
-            0.02385711669921875,
-            0.023773193359375,
-            0.03212738037109375,
-            0.02279806137084961,
-            0.024575233459472656,
-            0.024484634399414062,
-            0.029780149459838867
+            0.05827440665318416,
+            0.05827440665318416,
+            0.05827440665318416,
+            0.05827440665318416,
+            0.05827440665318416,
+            0.05827440665318416,
+            0.05827440665318416,
+            0.05827440665318416,
+            0.05827440665318416,
+            0.05827440665318416,
+            0.05827440665318416,
+            0.05827440665318416,
+            0.05827440665318416,
+            0.05827440665318416,
+            0.05827440665318416,
+            0.05827440665318416,
+            0.05827440665318416,
+            0.05827440665318416,
+            0.05827440665318416
          ],
          "mean": [
-            0.027907628279465895
+            0.05827440665318416
          ],
          "std": [
-            0.004350803405972634
+            0.0
          ]
       }
    },
-   "LSTM": {},
-   "GRU": {}
+   "GRU": {
+      "acc": {
+         "values": [
+            98.198,
+            99.247,
+            96.749,
+            99.18299999999999,
+            99.323,
+            69.501,
+            99.72999999999999,
+            99.548,
+            100.0,
+            99.732,
+            100.0,
+            99.203,
+            99.603,
+            99.235,
+            99.319,
+            97.715,
+            99.603,
+            93.951,
+            98.989
+         ],
+         "mean": [
+            97.3067894736842
+         ],
+         "std": [
+            6.700612482444361
+         ]
+      },
+      "prediction": {
+         "values": [
+            "City ⊔ GroupOfPeople ⊔ Group",
+            "Man ⊔ NaturalLanguage",
+            "EthnicGroup ⊔ Human",
+            "EvilSupernaturalBeing ⊔ Mountain",
+            "FreshWaterArea ⊔ FreshWaterArea ⊔ ReligiousOrganization",
+            "FreshWaterArea ⊔ StateOrProvince",
+            "FreshWaterArea ⊔ SupernaturalBeing",
+            "Human",
+            "Island ⊔ Organization",
+            "FreshWaterArea ⊔ ResidenceGroup ⊔ ResidenceGroup",
+            "Mountain ⊔ ReligiousOrganization",
+            "BeliefGroup ⊔ EthnicityAttribute ⊔ ReligiousOrganization",
+            "EthnicityAttribute ⊔ SupernaturalRegion ⊔ Tribe",
+            "Agent ⊔ FreshWaterArea",
+            "EvilSupernaturalBeing ⊔ ReligiousBeliefSystem",
+            "WaterArea",
+            "EthnicityAttribute ⊔ Tribe ⊔ Tribe",
+            "FreshWaterArea ⊔ SupernaturalRegion",
+            "Region ⊔ Region"
+         ]
+      },
+      "f1": {
+         "values": [
+            94.872,
+            98.802,
+            95.322,
+            57.143,
+            80.0,
+            14.508,
+            93.75,
+            99.34100000000001,
+            100.0,
+            95.238,
+            100.0,
+            88.46199999999999,
+            94.915,
+            98.994,
+            66.667,
+            26.087,
+            94.915,
+            20.339,
+            97.214
+         ],
+         "mean": [
+            79.81942105263158
+         ],
+         "std": [
+            28.128691803202592
+         ]
+      },
+      "time": {
+         "values": [
+            0.09317397154294528,
+            0.09317397154294528,
+            0.09317397154294528,
+            0.09317397154294528,
+            0.09317397154294528,
+            0.09317397154294528,
+            0.09317397154294528,
+            0.09317397154294528,
+            0.09317397154294528,
+            0.09317397154294528,
+            0.09317397154294528,
+            0.09317397154294528,
+            0.09317397154294528,
+            0.09317397154294528,
+            0.09317397154294528,
+            0.09317397154294528,
+            0.09317397154294528,
+            0.09317397154294528,
+            0.09317397154294528
+         ],
+         "mean": [
+            0.0931739715429453
+         ],
+         "std": [
+            1.3877787807814457e-17
+         ]
+      }
+   },
+   "LSTM": {
+      "acc": {
+         "values": [
+            98.088,
+            99.434,
+            63.50900000000001,
+            99.72800000000001,
+            99.323,
+            67.096,
+            98.652,
+            99.279,
+            99.86500000000001,
+            99.598,
+            99.591,
+            97.875,
+            99.735,
+            99.235,
+            99.591,
+            99.471,
+            99.871
+         ],
+         "mean": [
+            95.29064705882354
+         ],
+         "std": [
+            10.98144830232374
+         ]
+      },
+      "prediction": {
+         "values": [
+            "City ⊔ Group ⊔ SupernaturalRegion",
+            "Man ⊔ Mountain",
+            "Character ⊔ EthnicGroup",
+            "FreshWaterArea ⊔ Mountain ⊔ SupernaturalRegion",
+            "FreshWaterArea ⊔ FreshWaterArea ⊔ ReligiousOrganization",
+            "FreshWaterArea ⊔ God ⊔ ReligiousOrganization",
+            "FreshWaterArea ⊔ God ⊔ SupernaturalRegion",
+            "Human ⊔ SaltWaterArea ⊔ SaltWaterArea",
+            "Organization ⊔ Island ⊔ SupernaturalRegion",
+            "FreshWaterArea ⊔ ResidenceGroup ⊔ SupernaturalRegion",
+            "BeliefGroup ⊔ Mountain",
+            "BeliefGroup ⊔ FreshWaterArea ⊔ ReligiousOrganization",
+            "EthnicityAttribute ⊔ EthnicityAttribute ⊔ Tribe",
+            "Agent ⊔ FreshWaterArea",
+            "BeliefSystem ⊔ ReligiousBeliefSystem",
+            "EthnicityAttribute ⊔ SupernaturalRegion ⊔ Tribe",
+            "FreshWaterArea ⊔ SupernaturalRegion ⊔ Woman"
+         ]
+      },
+      "f1": {
+         "values": [
+            94.569,
+            99.099,
+            0.0,
+            90.0,
+            80.0,
+            3.243,
+            61.538000000000004,
+            98.95,
+            97.297,
+            93.023,
+            82.353,
+            61.905,
+            96.552,
+            98.994,
+            80.0,
+            93.333,
+            99.048
+         ],
+         "mean": [
+            78.22964705882353
+         ],
+         "std": [
+            30.28532775986569
+         ]
+      },
+      "time": {
+         "values": [
+            0.0781098512502817,
+            0.0781098512502817,
+            0.0781098512502817,
+            0.0781098512502817,
+            0.0781098512502817,
+            0.0781098512502817,
+            0.0781098512502817,
+            0.0781098512502817,
+            0.0781098512502817,
+            0.0781098512502817,
+            0.0781098512502817,
+            0.0781098512502817,
+            0.0781098512502817,
+            0.0781098512502817,
+            0.0781098512502817,
+            0.0781098512502817,
+            0.0781098512502817
+         ],
+         "mean": [
+            0.0781098512502817
+         ],
+         "std": [
+            0.0
+         ]
+      }
+   }
 }

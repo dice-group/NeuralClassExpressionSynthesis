@@ -58,6 +58,7 @@ parser.add_argument('--drop_prob', type=float, default=0.1, help='Dropout rate i
 parser.add_argument('--epochs', type=int, default=500, help='Number of training epochs')
 parser.add_argument('--batch_size', type=int, default=256, help='Training batch size')
 parser.add_argument('--cross_validate', type=str2bool, default=False, help='Whether to use a 10-fold cross-validation setting')
+parser.add_argument('--shuffle_examples', type=str2bool, default=False, help='Whether to shuffle positive and negative examples in the dataloader')
 parser.add_argument('--test', type=str2bool, default=True, help='Whether to evaluate the concept synthesizer on the test data during training')
 parser.add_argument('--final', type=str2bool, default=False, help='Whether to train the concept synthesizer on test+train data')
 parser.add_argument('--save_model', type=str2bool, default=True, help='Whether to save the model after training')

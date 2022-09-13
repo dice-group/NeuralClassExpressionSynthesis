@@ -4,6 +4,7 @@ sys.path.append(os.path.dirname(os.path.realpath(__file__)).split('utils')[0]+"u
 from nces import BaseConceptSynthesis
 import numpy as np, torch, pandas as pd
 from data import Data
+import random
 
 class CSDataLoader(BaseConceptSynthesis, Data, torch.utils.data.Dataset):
     def __init__(self, data, embeddings, kwargs):
@@ -11,6 +12,7 @@ class CSDataLoader(BaseConceptSynthesis, Data, torch.utils.data.Dataset):
         self.embeddings = embeddings
         super().__init__(kwargs)
         self.vocab_df = pd.DataFrame(self.vocab.values(), index=self.vocab.keys())
+        self.shuffle_examples = kwargs.shuffle_examples
 
     def __len__(self):
         return len(self.data_raw)
@@ -19,6 +21,9 @@ class CSDataLoader(BaseConceptSynthesis, Data, torch.utils.data.Dataset):
         key, value = self.data_raw[idx]
         pos = value['positive examples']
         neg = value['negative examples']
+        if self.shuffle_examples:
+            random.shuffle(pos)
+            random.shuffle(neg)
         assert '#' in pos[0] or '.' in pos[0], 'Namespace error, expected separator # or .'
         datapoint_pos = torch.FloatTensor(self.embeddings.loc[pos].values)
         datapoint_neg = torch.FloatTensor(self.embeddings.loc[neg].values)
