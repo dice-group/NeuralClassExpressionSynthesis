@@ -13,8 +13,6 @@ class BaseConceptSynthesis:
         kb = KnowledgeBase(path=self.knowledge_base_path)
         self.__num_examples__ = min(kwargs.num_examples, kb.individuals_count()//2)
         self.dl_syntax_renderer = DLSyntaxObjectRenderer()
-        self.alpha = kwargs.alpha
-        self.lbr = kwargs.lbr
         atomic_concepts = list(kb.ontology().classes_in_signature())
         self.atomic_concept_names = [self.dl_syntax_renderer.render(a) for a in atomic_concepts]
         self.role_names = [rel.get_iri().get_remainder() for rel in kb.ontology().object_properties_in_signature()]
@@ -22,7 +20,6 @@ class BaseConceptSynthesis:
         vocab = sorted(vocab) + ['PAD']
         self.inv_vocab = vocab
         self.vocab = {vocab[i]:i for i in range(len(vocab))} #dict(map(reversed, enumerate(vocab)))
-        self.max_num_atom_repeat = kwargs.max_num_atom_repeat
         self.max_length = kwargs.max_length
         self.kwargs = kwargs
         
@@ -47,22 +44,6 @@ class BaseConceptSynthesis:
                 list_ordered_pieces.append(concept_name[i])
             i += 1
         return list_ordered_pieces
-    
-    def get_scores_of_atom_indices(self, target):
-        Scores = torch.zeros((len(self.vocab),self.max_num_atom_repeat))
-        target = self.decompose(target)
-        if self.kwargs.use_adaptive_bounds:
-            scores = torch.tensor(len(target)).sqrt()*torch.linspace(self.alpha, self.alpha*(1-self.lbr), len(target))
-        else:
-            scores = torch.linspace(self.alpha, self.alpha*(1-self.lbr), len(target))
-        atom_counts = {a: 0 for a in target}
-        for j in range(len(target)):
-            try:
-                Scores[self.vocab[target[j]], atom_counts[target[j]]] = scores[j]
-                atom_counts[target[j]] += 1
-            except IndexError:
-                print('Index out of bound error, ignoring current atom index')
-        return target, Scores
     
     
     def get_labels(self, target):

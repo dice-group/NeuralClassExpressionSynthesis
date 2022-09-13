@@ -34,6 +34,7 @@ def str2bool(v):
 parser = argparse.ArgumentParser()
 parser.add_argument('--kbs', type=str, nargs='+', default=['carcinogenesis'], choices=['carcinogenesis', 'mutagenesis', 'semantic_bible', 'vicodi'], help='Knowledge base name')
 parser.add_argument('--models', type=str, nargs='+', default=['SetTransformer', 'LSTM', 'GRU'], help='Neural models')
+parser.add_argument('--load_pretrained', type=str2bool, default=False, help='Whether to load the pretrained model on carcinogenesis')
 parser.add_argument('--learner_name', type=str, default="SetTransformer", choices=['LSTM', 'GRU', 'SetTransformer'], help='Neural model')
 parser.add_argument('--knowledge_base_path', type=str, default="", help='Path to KB owl file')
 parser.add_argument('--path_to_csv_embeddings', type=str, default="", help='KB embedding path')
@@ -50,11 +51,7 @@ parser.add_argument('--ln', type=str2bool, default=False, help='Whether to use l
 parser.add_argument('--decay_rate', type=float, default=0.0, help='Decay rate for the optimizer')
 parser.add_argument('--grad_clip_value', type=float, default=5.0, help='Gradient clip value')
 parser.add_argument('--opt', type=str, default='Adam', help='Name of the optimizer to use')
-parser.add_argument('--max_num_atom_repeat', type=int, default=8, help='Maximum number of an atom repetition in a given class expression')
 parser.add_argument('--rnn_n_layers', type=int, default=2, help='Number of recurrent network layers')
-parser.add_argument('--alpha', type=float, default=10.0, help='Upper bound for scoring atoms/tokens')
-parser.add_argument('--lbr', type=float, default=0.8, help='Lower bound rate')
-parser.add_argument('--use_adaptive_bounds', type=str2bool, default=False, help='Whether to rescale the lower and upper bounds based on class expression lengths')
 parser.add_argument('--max_length', type=int, default=32, help='Maximum length of class expressions')
 parser.add_argument('--drop_prob', type=float, default=0.1, help='Dropout rate in neural networks')
 parser.add_argument('--epochs', type=int, default=500, help='Number of training epochs')
@@ -62,6 +59,7 @@ parser.add_argument('--batch_size', type=int, default=256, help='Training batch 
 parser.add_argument('--cross_validate', type=str2bool, default=False, help='Whether to use a 10-fold cross-validation setting')
 parser.add_argument('--test', type=str2bool, default=True, help='Whether to evaluate the concept synthesizer on the test data during training')
 parser.add_argument('--final', type=str2bool, default=False, help='Whether to train the concept synthesizer on test+train data')
+parser.add_argument('--save_model', type=str2bool, default=True, help='Whether to save the model after training')
 
 args = parser.parse_args()
 print("Setting: ", vars(args))
@@ -87,12 +85,10 @@ for kb in args.kbs:
     final = args.final
     test = args.test
     cross_validate = args.cross_validate
-    record_runtime = True
-    save_model = True
     if args.final:
         data_train = data_train + data_test
         test = False
         cross_validate = False
     experiment.train_all_nets(args.models, data_train, data_test, epochs=args.epochs, batch_size=args.batch_size, kf_n_splits=10, 
-                              cross_validate=cross_validate, test=test, save_model = save_model,
-                              optimizer = args.opt, record_runtime=record_runtime, final=final)
+                              cross_validate=cross_validate, test=test, save_model = args.save_model,
+                              optimizer = args.opt, record_runtime=True, final=final)

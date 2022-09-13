@@ -104,7 +104,6 @@ class SetTransformer(nn.Module):
                 ISAB(kwargs.proj_dim, kwargs.proj_dim, kwargs.num_heads, kwargs.num_inds, ln=kwargs.ln))
         self.dec = nn.Sequential(
                 PMA(kwargs.proj_dim, kwargs.num_heads, kwargs.num_seeds, ln=kwargs.ln),
-                SAB(kwargs.proj_dim, kwargs.proj_dim, kwargs.num_heads, ln=kwargs.ln),
                 nn.Linear(kwargs.proj_dim, len(self.vocab)*kwargs.max_length))
 
     def forward(self, x1, x2):
@@ -114,43 +113,3 @@ class SetTransformer(nn.Module):
         x = self.dec(x).reshape(-1, len(self.vocab), self.max_len)
         aligned_chars = self.inv_vocab[x.argmax(1).cpu()]
         return aligned_chars, x
-
-    
-class TreeTransformer(nn.Module):
-    def __init__(self, kwargs):
-        super(TreeTransformer, self).__init__()
-        self.name = 'TreeTransformer'
-        self.kwargs = kwargs
-        kb = KnowledgeBase(path=kwargs.knowledge_base_path)
-        renderer = DLSyntaxObjectRenderer()
-        atomic_concepts = list(kb.ontology().classes_in_signature())
-        atomic_concept_names = [renderer.render(a) for a in atomic_concepts]
-        role_names = [rel.get_iri().get_remainder() for rel in kb.ontology().object_properties_in_signature()]
-        vocab = atomic_concept_names + role_names + ['⊔', '⊓', '∃', '∀', '¬', '⊤', '⊥']
-        vocab = sorted(vocab)
-        self.inv_vocab = vocab
-        self.vocab = {vocab[i]:i for i in range(len(vocab))}
-        
-        self.embedding = nn.Embedding(len(self.vocab), kwargs.embedding_dim)
-        self.encoder = nn.Sequential(
-                ISAB(kwargs.input_size, kwargs.proj_dim, kwargs.num_heads, kwargs.num_inds, ln=kwargs.ln),
-                ISAB(kwargs.proj_dim, kwargs.proj_dim, kwargs.num_heads, kwargs.num_inds, ln=kwargs.ln))
-        self.decoder_head = nn.Sequential(
-                PMA(kwargs.proj_dim, kwargs.num_heads, kwargs.num_seeds, ln=kwargs.ln),
-                SAB(kwargs.proj_dim, kwargs.proj_dim, kwargs.num_heads, ln=kwargs.ln),
-                nn.Linear(kwargs.proj_dim, len(self.vocab)))
-        self.decoder_unary = nn.Sequential(
-                MAB(kwargs.proj_dim, kwargs.proj_dim, kwargs.proj_dim, kwargs.num_heads, ln=kwargs.ln),
-                PMA(kwargs.proj_dim, kwargs.num_heads, kwargs.num_seeds, ln=kwargs.ln),
-                nn.Linear(kwargs.proj_dim, len(self.vocab)))
-        self.decoder_left = nn.Sequential(
-                MAB(kwargs.proj_dim, kwargs.proj_dim, kwargs.proj_dim, kwargs.num_heads, ln=kwargs.ln),
-                PMA(kwargs.proj_dim, kwargs.num_heads, kwargs.num_seeds, ln=kwargs.ln),
-                nn.Linear(kwargs.proj_dim, len(self.vocab)))
-        self.dec_right = nn.Sequential(
-                MAB(kwargs.proj_dim, kwargs.proj_dim, kwargs.proj_dim, kwargs.num_heads, ln=kwargs.ln),
-                PMA(kwargs.proj_dim, kwargs.num_heads, kwargs.num_seeds, ln=kwargs.ln),
-                nn.Linear(kwargs.proj_dim, len(self.vocab)))
-        
-    def forward(self, x1, x2, target_scores=None):
-        raise NotImplementedError

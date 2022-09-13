@@ -23,43 +23,55 @@ import time
 class Experiment:
     
     def __init__(self, kwargs):
-        self.kwargs = kwargs
         self.decay_rate = kwargs.decay_rate
         self.clip_value = kwargs.grad_clip_value
-        self.cs = ConceptSynthesizer(kwargs)
+        setattr(kwargs, "pretrained_concept_synthesizer", base_path+"datasets/"+"carcinogenesis/Model_weights/"+kwargs.learner_name+".pt") # default pretrained path
         self.num_workers = kwargs.num_workers
-            
+        self.load_pretrained = kwargs.load_pretrained
+        self.cs = ConceptSynthesizer(kwargs)
+        self.kwargs = kwargs
+        
+    
+    def before_pad(self, arg):
+        arg_temp = []
+        for atm in arg:
+            if atm == 'PAD':
+                break
+            arg_temp.append(atm)
+        return arg_temp
+    
+    
     def compute_accuracy(self, prediction, target):
         def soft(arg1, arg2):
             arg1_ = arg1
             arg2_ = arg2
             if isinstance(arg1_, str):
-                arg1_ = set(BaseConceptSynthesis.decompose(arg1_)) - {'PAD'}
+                arg1_ = set(self.before_pad(BaseConceptSynthesis.decompose(arg1_)))
             else:
-                arg1_ = set(arg1_) - {'PAD'}
+                arg1_ = set(self.before_pad(arg1_))
             if isinstance(arg2_, str):
-                arg2_ = set(BaseConceptSynthesis.decompose(arg2_))
+                arg2_ = set(self.before_pad(BaseConceptSynthesis.decompose(arg2_)))
             else:
-                arg2_ = set(arg2_) - {'PAD'}
+                arg2_ = set(self.before_pad(arg2_))
             return 100*float(len(arg1_.intersection(arg2_)))/len(arg1_.union(arg2_))
-        
+
         def hard(arg1, arg2):
             arg1_ = arg1
             arg2_ = arg2
             if isinstance(arg1_, str):
-                arg1_ = [atm for atm in BaseConceptSynthesis.decompose(arg1_) if atm != 'PAD']
+                arg1_ = self.before_pad(BaseConceptSynthesis.decompose(arg1_))
             else:
-                arg1_ = [atm for atm in arg1_ if atm != 'PAD']
+                arg1_ = self.before_pad(arg1_)
             if isinstance(arg2_, str):
-                arg2_ = [atm for atm in BaseConceptSynthesis.decompose(arg2_) if atm != 'PAD']
+                arg2_ = self.before_pad(BaseConceptSynthesis.decompose(arg2_))
             else:
-                arg2_ = [atm for atm in arg2_ if atm != 'PAD']
+                arg2_ = self.before_pad(arg2_)
             return 100*float(sum(map(lambda x,y: x==y, arg1_, arg2_)))/max(len(arg1_), len(arg2_))
         soft_acc = sum(map(soft, prediction, target))/len(target)
         hard_acc = sum(map(hard, prediction, target))/len(target)
         return soft_acc, hard_acc
           
-            
+
     def get_optimizer(self, synthesizer, optimizer='Adam'):
         if optimizer == 'Adam':
             return torch.optim.Adam(synthesizer.parameters(), lr=self.kwargs.learning_rate)
@@ -73,11 +85,12 @@ class Experiment:
     
     def show_num_learnable_params(self):
         print("*"*20+"Trainable model size"+"*"*20)
-        size = sum([p.numel() for p in self.cs.synthesizer.parameters()])
+        size = sum([p.numel() for p in self.cs.model.parameters()])
         size_ = 0
         print("Synthesizer: ", size)
         print("*"*20+"Trainable model size"+"*"*20)
         print()
+        return size
         
     @staticmethod
     def collate_batch(batch):
@@ -91,18 +104,16 @@ class Experiment:
             target_labels.append(label)
         pos_emb_list = pad_sequence(pos_emb_list, batch_first=True, padding_value=0)
         neg_emb_list = pad_sequence(neg_emb_list, batch_first=True, padding_value=0)
-        #target_labels = pad_sequence(target_labels, batch_first=True, padding_value=0)
         target_labels = pad_sequence(target_labels, batch_first=True, padding_value=-100)
         return pos_emb_list, neg_emb_list, target_labels
             
         
     def map_to_token(self, idx_array):
-        return self.cs.synthesizer.inv_vocab[idx_array]
-    #[self.cs.synthesizer.inv_vocab[idx] for idx in idx_array if idx != -100]
+        return self.cs.model.inv_vocab[idx_array]
     
     def train(self, train_dataloader, test_dataloader, epochs=200, kf_n_splits=10, test=False, save_model = False, optimizer = 'Adam', record_runtime=False, final=False):
         device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-        self.show_num_learnable_params()
+        model_size = self.show_num_learnable_params()
         train_on_gpu = torch.cuda.is_available()
         if not train_on_gpu:
             print("Training on CPU, it may take long...")
@@ -111,9 +122,16 @@ class Experiment:
         print()
         print("#"*50)
         print()
-        print("{} starts training on {} data set \n".format(self.cs.synthesizer.name, self.kwargs.knowledge_base_path.split("/")[-2]))
+        print("{} starts training on {} data set \n".format(self.cs.model.name, self.kwargs.knowledge_base_path.split("/")[-2]))
         print("#"*50, "\n")
-        synthesizer = copy.deepcopy(self.cs.synthesizer)
+        if self.load_pretrained:
+            try:
+                self.cs.load_pretrained()
+                print("\nUsing pretrained model...\n")
+            except Exception:
+                print("\n")
+                print("**** Could not load from pretrained, missing file ****\n")
+        synthesizer = copy.deepcopy(self.cs.model)
         desc = synthesizer.name
         if final:
             desc = desc+'_final'
@@ -189,7 +207,7 @@ class Experiment:
             print("Test for {}:".format(synthesizer.name))
             print("Test soft accuracy: ", te_soft_acc)
             print("Test hard accuracy: ", te_hard_acc)
-            results_dict.update({"Test soft acc":te_soft_acc, "Test hard acc": te_hard_acc})
+            results_dict.update({"Model size": model_size, "Test soft acc":te_soft_acc, "Test hard acc": te_hard_acc})
         print("Train soft accuracy: {} ... Train hard accuracy: {}".format(max(Train_acc['soft']), max(Train_acc['hard'])))
         print()
         results_dict.update({"Train Max Soft Acc": max(Train_acc['soft']), "Train Max Hard Acc": max(Train_acc['hard']), "Train Min Loss": min(Train_loss)})
@@ -217,7 +235,7 @@ class Experiment:
         print()
         print("#"*50)
         print()
-        print("{} starts training on {} data set \n".format(self.cs.synthesizer.name, self.kb))
+        print("{} starts training on {} data set \n".format(self.cs.model.name, self.kb))
         print("#"*50, "\n")
         from sklearn.model_selection import KFold
         Kf = KFold(n_splits=kf_n_splits, shuffle=True, random_state=142)
@@ -227,8 +245,8 @@ class Experiment:
         best_val_score = 0.
         iterable = list(range(len(train_data)))
         for train_index, valid_index in Kf.split(iterable):
-            self.show_num_learnable_params()
-            synthesizer = copy.deepcopy(self.cs.synthesizer)
+            model_size = self.show_num_learnable_params()
+            synthesizer = copy.deepcopy(self.cs.model)
             if train_on_gpu:
                 synthesizer.cuda()
             opt = self.get_optimizer(synthesizer=synthesizer, optimizer=optimizer)
@@ -322,7 +340,7 @@ class Experiment:
             print("Test for {}:".format(synthesizer.name))
             print("Test soft accuracy: ", te_soft_acc)
             print("Test hard accuracy: ", te_hard_acc)
-            results_dict.update({"Test soft acc":te_soft_acc, "Test hard acc": te_hard_acc})
+            results_dict.update({"Model size": model_size, "Test soft acc":te_soft_acc, "Test hard acc": te_hard_acc})
         plot_data = (np.array([a['soft'] for a in All_acc['train']]).mean(1), np.array([a['hard'] for a in All_acc['train']]).mean(1),
                      np.array([a['soft'] for a in All_acc['val']]).mean(1), np.array([a['hard'] for a in All_acc['val']]).mean(1),
                      np.array([l for l in All_losses['train']]).mean(1), np.array([l for l in All_losses['val']]).mean(1))

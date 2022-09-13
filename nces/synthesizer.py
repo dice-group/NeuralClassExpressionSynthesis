@@ -12,7 +12,7 @@ class ConceptSynthesizer:
     def __init__(self, kwargs):
         self.kwargs = kwargs
         self.learner_name = kwargs.learner_name
-        self.synthesizer = self.get_synthesizer()
+        self.model = self.get_synthesizer()
         self.embeddings = self.get_embedding()
         
     
@@ -33,19 +33,11 @@ class ConceptSynthesizer:
             raise ValueError
             
     def refresh(self):
-        self.synthesizer = self.get_synthesizer()
+        self.model = self.get_synthesizer()
         
     def load_pretrained(self):
         assert self.kwargs.pretrained_concept_synthesizer, 'No pretrained length learner'
-        self.synthesizer = torch.load(self.kwargs.pretrained_concept_synthesizer, map_location=torch.device('cpu'))
-        self.synthesizer.eval()
-        
-    def predict(self, pos: Union[List[OWLNamedIndividual], List[str]], neg: Union[List[OWLNamedIndividual], List[str]]):
-        if isinstance(pos[0], OWLNamedIndividual):
-            pos = [ind.get_iri().as_str().split("/")[-1] for ind in pos]
-            neg = [ind.get_iri().as_str().split("/")[-1] for ind in neg]
-        datapoint_pos = torch.FloatTensor(self.embeddings.loc[pos].values).unsqueeze(0)
-        datapoint_neg = torch.FloatTensor(self.embeddings.loc[neg].values).unsqueeze(0)
-        return self.synthesizer(datapoint_pos, datapoint_neg)
-    
+        self.model = torch.load(self.kwargs.pretrained_concept_synthesizer, map_location=torch.device('cpu'))
+        self.model.eval()
+           
     
