@@ -1,0 +1,8 @@
+{
+   "Model size": 445120,
+   "Test soft acc": 67.02903577903575,
+   "Test hard acc": 67.36635434979762,
+   "Train Max Soft Acc": 73.37057934977706,
+   "Train Max Hard Acc": 77.67285306387842,
+   "Train Min Loss": 0.33520527419291046
+}
