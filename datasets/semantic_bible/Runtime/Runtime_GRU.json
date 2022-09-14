@@ -1,5 +1,5 @@
 {
    "Concept synthesizer": "GRU",
-   "Number of Epochs": 1000,
-   "Runtime (s)": 844.6475620269775
+   "Number of Epochs": 500,
+   "Runtime (s)": 434.6812057495117
 }

@@ -1,9 +1,9 @@
 import sys, os
 
-sys.path.append(os.path.dirname(os.path.realpath(__file__)).split('generators')[0])
+#sys.path.append(os.path.dirname(os.path.realpath(__file__)).split('generators')[0])
 
-from generators.concept_description import ConceptDescriptionGenerator
-from ontolearn import KnowledgeBase
+from concept_description import ConceptDescriptionGenerator
+from ontolearn.knowledge_base import KnowledgeBase
 from ontolearn.refinement_operators import ExpressRefinement
 import random, os, copy, json
 from typing import Final
@@ -22,18 +22,17 @@ class KBToDataForConceptSynthesis:
    Finally, we aim at training a deep neural network to predict the syntax of concepts from their instances. Hence, we export each concept and its instances (eventually positive and negative examples) into json files.  
     """
 
-    def __init__(self, path, concept_gen_path_length=5, max_child_length=25, refinement_expressivity=0.6, downsample_refinements=True, num_rand_samples=150, min_num_pos_examples=1, max_num_pos_examples=2000, num_examples=1000):
+    def __init__(self, path, depth=5, max_child_length=25, refinement_expressivity=0.6, downsample_refinements=True, num_rand_samples=150, min_num_pos_examples=1, max_num_pos_examples=2000):
         self.path = path
         self.dl_syntax_renderer = DLSyntaxObjectRenderer()
         self.kb = KnowledgeBase(path=path)
-        self.num_examples = num_examples
+        self.num_examples = min(self.kb.individuals_count()//2, 1000)
         self.min_num_pos_examples = min_num_pos_examples
         self.max_num_pos_examples = max_num_pos_examples
         atomic_concepts: Final = frozenset(self.kb.ontology().classes_in_signature())
         self.atomic_concept_names: Final = frozenset([self.dl_syntax_renderer.render(a) for a in atomic_concepts])
-        self.role_names: Final = frozenset([rel.get_iri().get_remainder() for rel in self.kb.ontology().object_properties_in_signature()]) #+list(kb.ontology().data_properties_in_signature()) data properties are not yet supported
         rho = ExpressRefinement(knowledge_base=self.kb, max_child_length=max_child_length, downsample = downsample_refinements, expressivity=refinement_expressivity)
-        self.lp_gen = ConceptDescriptionGenerator(knowledge_base=self.kb, refinement_operator=rho, depth=concept_gen_path_length, num_rand_samples=num_rand_samples)
+        self.lp_gen = ConceptDescriptionGenerator(knowledge_base=self.kb, refinement_operator=rho, depth=depth, num_rand_samples=num_rand_samples)
 
     
     def generate_descriptions(self):
@@ -63,7 +62,7 @@ class KBToDataForConceptSynthesis:
         return self
     
 
-    def save_train_data(self):
+    def save_data(self):
         data = dict()
         for concept in tqdm(self.train_concepts):
             pos = set(self.kb.individuals(concept))
@@ -93,14 +92,31 @@ class KBToDataForConceptSynthesis:
             
         data = list(data.items())
         data_train, data_test = train_test_split(data, test_size=0.01, random_state=42)
-        os.makedirs('/'+("/").join(self.path.split("/")[1:-1])+'/Train_data/', exist_ok=True)
-        os.makedirs('/'+("/").join(self.path.split("/")[1:-1])+'/Test_data/', exist_ok=True)
-        with open(f'Method/Datasets/{kb}/Test_data/Data.json', 'w') as file_test:
+        os.makedirs(f'../datasets/{self.path.split("/")[-2]}/Train_data/', exist_ok=True)
+        os.makedirs(f'../datasets/{self.path.split("/")[-2]}/Test_data/', exist_ok=True)
+        with open(f'../datasets/{self.path.split("/")[-2]}/Test_data/Data.json', 'w') as file_test:
             json.dump(dict(data_test), file_test, indent=3, ensure_ascii=False)
 
-        with open(f'Method/Datasets/{kb}/Train_data/Data.json', 'w') as file_train:
+        with open(f'../datasets/{self.path.split("/")[-2]}/Train_data/Data.json', 'w') as file_train:
             json.dump(dict(data_train), file_train, indent=3, ensure_ascii=False)
 
-        print("Data saved at %s"% "/"+("/").join(self.path.split("/")[1:-1]))
+        print(f'Data saved at ../datasets/{self.path.split("/")[-2]}')
               
             
+import argparse
+
+parser = argparse.ArgumentParser()
+
+parser.add_argument('--kbs', type=str, nargs='+', default=['carcinogenesis'], choices=['carcinogenesis', 'mutagenesis', 'semantic_bible', 'vicodi', 'family-benchmark'], help='Knowledge base name')
+parser.add_argument('--num_rand_samples', type=int, default=10, help='The number of random samples at each step of the generation process')
+parser.add_argument('--depth', type=int, default=4, help='The depth of refinements')
+parser.add_argument('--max_child_len', type=int, default=6, help='Maximum child length')
+parser.add_argument('--concept_gen_path_length', type=int, default=6, help='Maximum length ')
+parser.add_argument('--refinement_expressivity', type=float, default=0.5)
+parser.add_argument('--rho', type=str, default='ExpressRefinement', choices=['ExpressRefinement', 'CELOERefinement'], help='Refinement operator to use')
+
+args = parser.parse_args()
+
+for kb in args.kbs:
+    DataGen = KBToDataForConceptSynthesis(path=f'../datasets/{kb}/{kb}.owl', depth=args.depth, max_child_length=args.max_child_len, refinement_expressivity=args.refinement_expressivity, downsample_refinements=True, num_rand_samples=args.num_rand_samples, min_num_pos_examples=5, max_num_pos_examples=2000)
+    DataGen.generate_descriptions().save_data()
