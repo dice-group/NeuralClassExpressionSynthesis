@@ -26,7 +26,7 @@ class KBToDataForConceptSynthesis:
         self.path = path
         self.dl_syntax_renderer = DLSyntaxObjectRenderer()
         self.kb = KnowledgeBase(path=path)
-        self.num_examples = min(self.kb.individuals_count()//2, 1000)
+        self.num_examples = min(self.kb.individuals_count(), 1000)
         self.min_num_pos_examples = min_num_pos_examples
         self.max_num_pos_examples = max_num_pos_examples
         atomic_concepts: Final = frozenset(self.kb.ontology().classes_in_signature())
@@ -109,14 +109,13 @@ parser = argparse.ArgumentParser()
 
 parser.add_argument('--kbs', type=str, nargs='+', default=['carcinogenesis'], choices=['carcinogenesis', 'mutagenesis', 'semantic_bible', 'vicodi', 'family-benchmark'], help='Knowledge base name')
 parser.add_argument('--num_rand_samples', type=int, default=10, help='The number of random samples at each step of the generation process')
-parser.add_argument('--depth', type=int, default=4, help='The depth of refinements')
-parser.add_argument('--max_child_len', type=int, default=6, help='Maximum child length')
-parser.add_argument('--concept_gen_path_length', type=int, default=6, help='Maximum length ')
+parser.add_argument('--depth', type=int, default=6, help='The depth of refinements')
+parser.add_argument('--max_child_len', type=int, default=8, help='Maximum child length')
 parser.add_argument('--refinement_expressivity', type=float, default=0.5)
 parser.add_argument('--rho', type=str, default='ExpressRefinement', choices=['ExpressRefinement', 'CELOERefinement'], help='Refinement operator to use')
 
 args = parser.parse_args()
 
 for kb in args.kbs:
-    DataGen = KBToDataForConceptSynthesis(path=f'../datasets/{kb}/{kb}.owl', depth=args.depth, max_child_length=args.max_child_len, refinement_expressivity=args.refinement_expressivity, downsample_refinements=True, num_rand_samples=args.num_rand_samples, min_num_pos_examples=5, max_num_pos_examples=2000)
+    DataGen = KBToDataForConceptSynthesis(path=f'../datasets/{kb}/{kb}.owl', depth=args.depth, max_child_length=args.max_child_len, refinement_expressivity=args.refinement_expressivity, downsample_refinements=True, num_rand_samples=args.num_rand_samples, min_num_pos_examples=1, max_num_pos_examples=2000)
     DataGen.generate_descriptions().save_data()
