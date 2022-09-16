@@ -2,7 +2,7 @@
 Learning class expressions in DL using neural networks
 
 
-![ncel-dlo](ncel-dlo.png)
+![ncel-dlo](nces.jpg)
 
 ## Installation
 
