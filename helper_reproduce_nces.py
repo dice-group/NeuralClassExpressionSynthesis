@@ -93,26 +93,27 @@ def get_ensemble_prediction(models, x1, x2):
     prediction = model.inv_vocab[scores.argmax(1)]
     return prediction
 
-def predict_class_expressions(model_name, kb, args, ensemble=False):
-    print(f"\n##{model_name}##")
-    args.knowledge_base_path = "datasets/"+f"{kb}/{kb}.owl"
-    embeddings = pd.read_csv(f"embeddings/{kb}/ConEx_entity_embeddings.csv").set_index('Unnamed: 0')
-    dataloader = get_data(kb, embeddings, args)
-    if ensemble:
+def predict_class_expressions(kb, model_name, args):
+    if isinstance(model_name, list):
+        print(f"\n## Ensemble prediction ({'+'.join(model_name)})")
+    
         models = [torch.load(f"datasets/{kb}/Model_weights/{name}.pt", map_location=torch.device('cpu'))\
-                  for name in ["SetTransformer", "GRU", "LSTM"]]
-    if not ensemble:
-        model = torch.load(f"datasets/{kb}/Model_weights/{model_name}.pt", map_location=torch.device('cpu'))
+                      for name in model_name]
+        model = models[0] # Needed for vocabulary only, see map_to_token below
         model.eval()
     else:
-        model = models[0]
+        print(f"\n## Single model prediction ({model_name})")
+        model = torch.load(f"datasets/{kb}/Model_weights/{model_name}.pt", map_location=torch.device('cpu'))
         model.eval()
+    args.knowledge_base_path = "datasets/"+f"{kb}/{kb}.owl"
+    embeddings = pd.read_csv(f"datasets/{kb}/Embeddings/ConEx_entity_embeddings.csv").set_index('Unnamed: 0')
+    dataloader = get_data(kb, embeddings, args)
     soft_acc, hard_acc = 0.0, 0.0
     preds = []
     targets = []
     for x1, x2, labels in tqdm(dataloader):
         target_sequence = map_to_token(model, labels)
-        if ensemble:
+        if isinstance(model_name, list):
             pred_sequence = get_ensemble_prediction(models, x1, x2)
         else:
             pred_sequence, _ = model(x1, x2)
@@ -131,7 +132,7 @@ def evaluate_nces(kb_name, models, args, save_results=False, verbose=False):
     print('#'*50)
     desc = ""
     if args.shuffle_examples:
-        desc = "_shuffle"
+        desc = "_Shuffle"
     All_metrics = {m: defaultdict(lambda: defaultdict(list)) for m in models}
     print()
     kb = KnowledgeBase(path=f"datasets/{kb_name}/{kb_name}.owl")
@@ -150,7 +151,7 @@ def evaluate_nces(kb_name, models, args, save_results=False, verbose=False):
         data_test = json.load(file)
     for model_name in models:
         t0 = time.time()
-        predictions, targets = predict_class_expressions(model_name, kb_name, args)
+        predictions, targets = predict_class_expressions(kb_name, model_name, args)
         t1 = time.time()
         duration = (t1-t0)/len(predictions)
         for i, pb_str in enumerate(targets):
@@ -166,59 +167,52 @@ def evaluate_nces(kb_name, models, args, save_results=False, verbose=False):
                 for i in range(len(pred))[::-1]:
                     try:
                         prediction = dl_parser.parse_expression("".join(pred.tolist().insert(i,')')))
-                        syntax_checker.renderer.render(prediction)
                         succeed = True
                         break
                     except Exception:
                         pass
                 if not succeed:
                     try:
-                        pred = syntax_checker.correct(pred.sum())
+                        pred = syntax_checker.correct(predictions[i].sum())
                         pred = list(syntax_checker.get_suggestions(pred))[-1]
                         prediction = syntax_checker.get_concept(pred)
                     except Exception:
                         print(f"Could not understand expression {pred}")
-                        continue
+                        
             elif (pred==')').sum() > (pred=='(').sum():
                 for i in range(len(pred)):
                     try:
                         prediction = dl_parser.parse_expression("".join(pred.tolist().insert(i,'(')))
-                        syntax_checker.renderer.render(prediction)
                         succeed = True
                         break
                     except Exception:
                         pass
                 if not succeed:
                     try:
-                        pred = syntax_checker.correct(pred.sum())
+                        pred = syntax_checker.correct(predictions[i].sum())
                         pred = list(syntax_checker.get_suggestions(pred))[-1]
                         prediction = syntax_checker.get_concept(pred)
                     except Exception:
                         print(f"Could not understand expression {pred}")
-                        continue
             else:
                 try:
                     prediction = dl_parser.parse_expression("".join(pred.tolist()))
-                    syntax_checker.renderer.render(prediction)
                 except Exception:
                     try:
-                        pred = syntax_checker.correct(pred.sum())
+                        pred = syntax_checker.correct(predictions[i].sum())
                         pred = list(syntax_checker.get_suggestions(pred))[-1]
                         prediction = syntax_checker.get_concept(pred)
                     except Exception:
                         print(f"Could not understand expression {pred}")
-                        continue
+            if prediction is None:
+                prediction = dl_parser.parse_expression('⊤')
             target_expression = dl_parser.parse_expression(pb_str) # The target class expression
-            #positive_examples = {ind.get_iri().as_str().split("/")[-1] for ind in kb.individuals(target_expression)}
-            #negative_examples = All_individuals-positive_examples
-            #acc, f1 = evaluator.evaluate(prediction, positive_examples, negative_examples)
             try:
                 positive_examples = {ind.get_iri().as_str().split("/")[-1] for ind in kb.individuals(target_expression)}
                 negative_examples = All_individuals-positive_examples
                 acc, f1 = evaluator.evaluate(prediction, positive_examples, negative_examples)
             except Exception as err:
                 print(err)
-                continue
             if verbose:
                 print(f'Problem {i}, Target: {pb_str}, Prediction: {syntax_checker.renderer.render(prediction)}, Acc: {acc}, F1: {f1}')
                 print()
@@ -244,11 +238,12 @@ def evaluate_nces(kb_name, models, args, save_results=False, verbose=False):
                 json.dump(All_metrics, file, indent=3, ensure_ascii=False)
 
                 
-def evaluate_ensemble(kb_name, args, model_name="Ensemble", save_results=False, verbose=False):
+def evaluate_ensemble(kb_name, args, save_results=False, verbose=False):
     print('#'*50)
     print('NCES evaluation on {} KB:'.format(kb_name))
     print('#'*50)
-    All_metrics = {model_name: defaultdict(lambda: defaultdict(list))}
+    All_metrics = {'+'.join(combine): defaultdict(lambda: defaultdict(list)) for combine in [["SetTransformer", "GRU"], \
+                                        ["SetTransformer", "LSTM"], ["GRU", "LSTM"], ["SetTransformer", "GRU", "LSTM"]]}
     print()
     kb = KnowledgeBase(path=f"datasets/{kb_name}/{kb_name}.owl")
     namespace = kb.ontology()._onto.base_iri
@@ -264,93 +259,91 @@ def evaluate_ensemble(kb_name, args, model_name="Ensemble", save_results=False, 
     All_individuals = set(kb.individuals())
     with open(f"datasets/{kb_name}/Test_data/Data.json", "r") as file:
         data_test = json.load(file)
-        
-    t0 = time.time()
-    predictions, targets = predict_class_expressions(model_name, kb_name, args, ensemble=True)
-    t1 = time.time()
-    duration = (t1-t0)/len(predictions)
-    for i, pb_str in enumerate(targets):
-        pb_str = "".join(before_pad(pb_str))
-        try:
-            end_idx = np.where(predictions[i] == 'PAD')[0][0] # remove padding token
-        except IndexError:
-            end_idx = 1
-        pred = predictions[i][:end_idx]
-        #print("Before parsing: ", pred.sum())
-        succeed = False
-        if (pred=='(').sum() > (pred==')').sum():
-            for i in range(len(pred))[::-1]:
-                try:
-                    prediction = dl_parser.parse_expression("".join(pred.tolist().insert(i,')')))
-                    succeed = True
-                    break
-                except Exception:
-                    pass
-            if not succeed:
-                try:
-                    pred = syntax_checker.correct(pred.sum())
-                    pred = list(syntax_checker.get_suggestions(pred))[-1]
-                    prediction = syntax_checker.get_concept(pred)
-                except Exception:
-                    print(f"Could not understand expression {pred}")
-                    continue
-        elif (pred==')').sum() > (pred=='(').sum():
-            for i in range(len(pred)):
-                try:
-                    prediction = dl_parser.parse_expression("".join(pred.tolist().insert(i,'(')))
-                    succeed = True
-                    break
-                except Exception:
-                    pass
-            if not succeed:
-                try:
-                    pred = syntax_checker.correct(pred.sum())
-                    pred = list(syntax_checker.get_suggestions(pred))[-1]
-                    prediction = syntax_checker.get_concept(pred)
-                except Exception:
-                    print(f"Could not understand expression {pred}")
-                    continue
-        else:
+    for combine in All_metrics.keys():     
+        t0 = time.time()
+        predictions, targets = predict_class_expressions(kb_name, combine.split('+'), args)
+        t1 = time.time()
+        duration = (t1-t0)/len(predictions)
+        for i, pb_str in enumerate(targets):
+            pb_str = "".join(before_pad(pb_str))
             try:
-                prediction = dl_parser.parse_expression("".join(pred.tolist()))
-            except Exception:
+                end_idx = np.where(predictions[i] == 'PAD')[0][0] # remove padding token
+            except IndexError:
+                end_idx = 1
+            pred = predictions[i][:end_idx]
+            #print("Before parsing: ", pred.sum())
+            succeed = False
+            if (pred=='(').sum() > (pred==')').sum():
+                for i in range(len(pred))[::-1]:
+                    try:
+                        prediction = dl_parser.parse_expression("".join(pred.tolist().insert(i,')')))
+                        succeed = True
+                        break
+                    except Exception:
+                        pass
+                if not succeed:
+                    try:
+                        pred = syntax_checker.correct(predictions[i].sum())
+                        pred = list(syntax_checker.get_suggestions(pred))[-1]
+                        prediction = syntax_checker.get_concept(pred)
+                    except Exception:
+                        print(f"Could not understand expression {pred}")
+            elif (pred==')').sum() > (pred=='(').sum():
+                for i in range(len(pred)):
+                    try:
+                        prediction = dl_parser.parse_expression("".join(pred.tolist().insert(i,'(')))
+                        succeed = True
+                        break
+                    except Exception:
+                        pass
+                if not succeed:
+                    try:
+                        pred = syntax_checker.correct(predictions[i].sum())
+                        pred = list(syntax_checker.get_suggestions(pred))[-1]
+                        prediction = syntax_checker.get_concept(pred)
+                    except Exception:
+                        print(f"Could not understand expression {pred}")
+            else:
                 try:
-                    pred = syntax_checker.correct(pred.sum())
-                    pred = list(syntax_checker.get_suggestions(pred))[-1]
-                    prediction = syntax_checker.get_concept(pred)
+                    prediction = dl_parser.parse_expression("".join(pred.tolist()))
                 except Exception:
-                    print(f"Could not understand expression {pred}")
-                    continue
-        target_expression = dl_parser.parse_expression(pb_str) # The target class expression
-        try:
-            positive_examples = {ind.get_iri().as_str().split("/")[-1] for ind in kb.individuals(target_expression)}
-            negative_examples = All_individuals-positive_examples
-            acc, f1 = evaluator.evaluate(prediction, positive_examples, negative_examples)
-        except Exception as err:
-            print(err)
-            continue
-        if verbose:
-            print(f'Problem {i}, Target: {pb_str}, Prediction: {syntax_checker.renderer.render(prediction)}, Acc: {acc}, F1: {f1}')
-            print()
-        All_metrics["Ensemble"]['acc']['values'].append(acc)
-        All_metrics["Ensemble"]['prediction']['values'].append(syntax_checker.renderer.render(prediction))
-        All_metrics["Ensemble"]['f1']['values'].append(f1)
-        All_metrics["Ensemble"]['time']['values'].append(duration)
+                    try:
+                        pred = syntax_checker.correct(predictions[i].sum())
+                        pred = list(syntax_checker.get_suggestions(pred))[-1]
+                        prediction = syntax_checker.get_concept(pred)
+                    except Exception:
+                        print(f"Could not understand expression {pred}")
+            if prediction is None:
+                prediction = dl_parser.parse_expression('⊤')
+            target_expression = dl_parser.parse_expression(pb_str) # The target class expression
+            try:
+                positive_examples = {ind.get_iri().as_str().split("/")[-1] for ind in kb.individuals(target_expression)}
+                negative_examples = All_individuals-positive_examples
+                acc, f1 = evaluator.evaluate(prediction, positive_examples, negative_examples)
+            except Exception as err:
+                print(err)
+            if verbose:
+                print(f'Problem {i}, Target: {pb_str}, Prediction: {syntax_checker.renderer.render(prediction)}, Acc: {acc}, F1: {f1}')
+                print()
+            All_metrics[combine]['acc']['values'].append(acc)
+            All_metrics[combine]['prediction']['values'].append(syntax_checker.renderer.render(prediction))
+            All_metrics[combine]['f1']['values'].append(f1)
+            All_metrics[combine]['time']['values'].append(duration)
 
-    for metric in All_metrics["Ensemble"]:
-        if metric != 'prediction':
-            All_metrics["Ensemble"][metric]['mean'] = [np.mean(All_metrics["Ensemble"][metric]['values'])]
-            All_metrics["Ensemble"][metric]['std'] = [np.std(All_metrics["Ensemble"][metric]['values'])]
+        for metric in All_metrics[combine]:
+            if metric != 'prediction':
+                All_metrics[combine][metric]['mean'] = [np.mean(All_metrics[combine][metric]['values'])]
+                All_metrics[combine][metric]['std'] = [np.std(All_metrics[combine][metric]['values'])]
 
-    print("Ensemble"+' Speed: {}s +- {} / lp'.format(round(All_metrics["Ensemble"]['time']['mean'][0], 2),\
-                                                           round(All_metrics["Ensemble"]['time']['std'][0], 2)))
-    print("Ensemble"+' Avg Acc: {}% +- {} / lp'.format(round(All_metrics["Ensemble"]['acc']['mean'][0], 2),\
-                                                           round(All_metrics["Ensemble"]['acc']['std'][0], 2)))
-    print("Ensemble"+' Avg F1: {}% +- {} / lp'.format(round(All_metrics["Ensemble"]['f1']['mean'][0], 2),\
-                                                           round(All_metrics["Ensemble"]['f1']['std'][0], 2)))
-    
-    print()
+        print(combine+' Speed: {}s +- {} / lp'.format(round(All_metrics[combine]['time']['mean'][0], 2),\
+                                                               round(All_metrics[combine]['time']['std'][0], 2)))
+        print(combine+' Avg Acc: {}% +- {} / lp'.format(round(All_metrics[combine]['acc']['mean'][0], 2),\
+                                                               round(All_metrics[combine]['acc']['std'][0], 2)))
+        print(combine+' Avg F1: {}% +- {} / lp'.format(round(All_metrics[combine]['f1']['mean'][0], 2),\
+                                                               round(All_metrics[combine]['f1']['std'][0], 2)))
+
+        print()
 
     if save_results:
-        with open("datasets/"+kb_name+"/Results/NCES_Ensemble.json", "w") as file:
+        with open(f"datasets/{kb_name}/Results/NCES_Ensemble.json", "w") as file:
             json.dump(All_metrics, file, indent=3, ensure_ascii=False)

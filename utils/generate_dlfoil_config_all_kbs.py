@@ -10,7 +10,7 @@ if __name__ == "__main__":
                         help="Path to an example configuration file")
     args = parser.parse_args()
     
-    kbs = ["carcinogenesis", "mutagenesis", "family-benchmark", "semantic_bible", "vicodi"]
+    kbs = ["carcinogenesis", "mutagenesis", "semantic_bible", "vicodi"]
     for kb in kbs:
         path = "../dl-foil/DLFoil2/ontos/"+kb+".owl"
         if not os.path.isfile(path):

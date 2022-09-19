@@ -10,20 +10,20 @@ import urllib.parse
 currentpath = os.path.dirname(os.path.realpath(__file__))
 sys.path.append(currentpath.split("dllearner")[0])
 
-from ontolearn.binders import DLLearnerBinder
+from binders import DLLearnerBinder
 from utils.concept_length import concept_length
-from ontolearn import KnowledgeBase
+from ontolearn.knowledge_base import KnowledgeBase
 
 if __name__ == '__main__':
     import argparse
     parser = argparse.ArgumentParser()
     parser.add_argument('--algo', type=str, nargs='+', default=['ocel', 'celoe', 'eltl'], help='The algorithm to be used')
-    parser.add_argument('--kb', type=str, nargs='+', default=['family-benchmark', 'semantic_bible', 'mutagenesis', 'carcinogenesis', 'vicodi'], \
+    parser.add_argument('--kbs', type=str, nargs='+', default=['family-benchmark', 'semantic_bible', 'mutagenesis', 'carcinogenesis', 'vicodi'], \
                        help='The knowledge bases of interest')
     parser.add_argument('--max_runtime', type=int, default=300, help='The maximum runtime of CELOE')
     args = parser.parse_args()
     
-    for kb in args.kb:
+    for kb in args.kbs:
         lp_path = currentpath.split("dllearner")[0]+f"datasets/{kb}/Test_data/Data.json"
         with open(lp_path,"r") as lp_file:
             data_test = json.load(lp_file)
@@ -58,10 +58,10 @@ if __name__ == '__main__':
                 print('Best prediction: ', best_pred_algo)
                 print()
                 if model == 'ocel': # No F-measure for OCEL
-                    Result_dict['F-measure'].append(-1.)
+                    Result_dict['F-measure'].append(-100.)
                 else:
-                    Result_dict['F-measure'].append(best_pred_algo['F-measure']/100)
-                Result_dict['Accuracy'].append(best_pred_algo['Accuracy']/100)
+                    Result_dict['F-measure'].append(best_pred_algo['F-measure'])
+                Result_dict['Accuracy'].append(best_pred_algo['Accuracy'])
                 if not 'Runtime' in best_pred_algo or best_pred_algo['Runtime'] is None:
                     Result_dict['Prediction'].append('None')
                     Result_dict['Runtime'].append(duration)

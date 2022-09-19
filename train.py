@@ -32,7 +32,7 @@ def str2bool(v):
         raise ValueError('Invalid boolean value.')
         
 parser = argparse.ArgumentParser()
-parser.add_argument('--kbs', type=str, nargs='+', default=['carcinogenesis'], choices=['carcinogenesis', 'mutagenesis', 'semantic_bible', 'vicodi', 'family-benchmark'],
+parser.add_argument('--kbs', type=str, nargs='+', default=['carcinogenesis'], choices=['carcinogenesis', 'mutagenesis', 'semantic_bible', 'vicodi'],
                     help='Knowledge base name')
 parser.add_argument('--models', type=str, nargs='+', default=['SetTransformer', 'LSTM', 'GRU'], help='Neural models')
 parser.add_argument('--load_pretrained', type=str2bool, default=False, help='Whether to load the pretrained model on carcinogenesis')
@@ -79,7 +79,7 @@ for kb in args.kbs:
         data_test = json.load(file)
         
     args.knowledge_base_path = f"datasets/{kb}/{kb}.owl"
-    args.path_to_csv_embeddings = f"embeddings/{kb}/ConEx_entity_embeddings.csv"
+    args.path_to_csv_embeddings = f"datasets/{kb}/Embeddings/ConEx_entity_embeddings.csv"
     experiment = Experiment(args)
     setattr(experiment, 'kb', kb)
     data_train, data_test = list(data_train.items()), list(data_test.items())

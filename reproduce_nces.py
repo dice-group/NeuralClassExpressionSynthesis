@@ -21,7 +21,7 @@ if __name__ == '__main__':
 
     parser = argparse.ArgumentParser()
 
-    parser.add_argument('--kbs', type=str, nargs='+', default=['carcinogenesis'], choices=['carcinogenesis', 'mutagenesis', 'semantic_bible', 'vicodi', 'family-benchmark'], help='Knowledge base name')
+    parser.add_argument('--kbs', type=str, nargs='+', default=['carcinogenesis'], choices=['carcinogenesis', 'mutagenesis', 'semantic_bible', 'vicodi'], help='Knowledge base name')
     parser.add_argument('--ensemble', type=str2bool, default=True, help='Whether to also evaluate the ensemble model')
     parser.add_argument('--shuffle_examples', type=str2bool, default=True, help='Whether to evaluate the stability of each model w.r.t. positive and negative examples\' shuffling')
     parser.add_argument('--save_results', type=str2bool, default=False, help='Whether to save the evaluation results')

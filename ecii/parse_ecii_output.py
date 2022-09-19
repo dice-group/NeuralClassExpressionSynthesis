@@ -19,24 +19,24 @@ def parse_output(kb):
                 results['F-measure'].append(f1)
                 break
         
-    with open(base_path+f'/Datasets/{kb}/Results/concept_learning_results_ecii.json', 'w') as ecii_file:
+    with open(base_path+f'/datasets/{kb}/Results/concept_learning_results_ecii.json', 'w') as ecii_file:
         json.dump(results, ecii_file, indent=3)
         
     avg_res = dict([(key, {'mean': np.mean(results[key]), 'std': np.std(results[key])}) for key in results])
     
-    with open(base_path+f'/Datasets/{kb}/Results/concept_learning_avg_results__ecii.json', 'w') as ecii_file:
+    with open(base_path+f'/datasets/{kb}/Results/concept_learning_avg_results__ecii.json', 'w') as ecii_file:
         json.dump(avg_res, ecii_file, indent=3)
         
         
 if __name__ == '__main__':
     import argparse
     parser = argparse.ArgumentParser()
-    parser.add_argument('--kb', type=str, nargs='+', default=['family-benchmark', 'semantic_bible', 'mutagenesis', 'carcinogenesis', 'vicodi'])
+    parser.add_argument('--kbs', type=str, nargs='+', default=['family-benchmark', 'semantic_bible', 'mutagenesis', 'carcinogenesis', 'vicodi'])
     args = parser.parse_args()
-    for kb in args.kb:
+    for kb in args.kbs:
         print(f'Parsing ECCI output on {kb}\n')
         parse_output(kb)
-    print(f'\nDone parsing ECCI output on the following KBs: {args.kb}')
+    print(f'\nDone parsing ECCI output on the following KBs: {args.kbs}')
     
     
     

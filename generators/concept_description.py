@@ -4,14 +4,15 @@ class ConceptDescriptionGenerator:
     Learning problem generator.
     """
 
-    def __init__(self, knowledge_base, refinement_operator, depth=2, num_rand_samples=150):
+    def __init__(self, knowledge_base, refinement_operator, depth=2, max_length=10, num_rand_samples=150):
         self.kb = knowledge_base
         self.rho = refinement_operator
         self.depth = depth
         self.num_rand_samples = num_rand_samples
+        self.max_length = max_length
 
     def apply_rho(self, concept):
-        refinements = {ref for ref in self.rho.refine(concept)}
+        refinements = {ref for ref in self.rho.refine(concept, max_length=self.max_length)}
         if refinements:
             return list(refinements)
 
