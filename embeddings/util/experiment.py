@@ -216,6 +216,8 @@ class Experiment:
         """
         trained model
         """
+        if self.cuda:
+            model.cuda()
         if self.dataset.train_data:
             if self.kwargs['scoring_technique'] == 'KvsAll':
                 results = self.evaluate_one_to_n(model, self.dataset.train_data,
@@ -237,6 +239,8 @@ class Experiment:
         """
         Validation
         """
+        if self.cuda:
+            model.cuda()
         model.eval()
         if self.dataset.valid_data:
             if self.kwargs['scoring_technique'] == 'KvsAll':
@@ -251,9 +255,9 @@ class Experiment:
 
     def train(self, model):
         """ Training."""
+        model.init()
         if self.cuda:
             model.cuda()
-        model.init()
         if self.optim == 'Adam':
             self.optimizer = torch.optim.Adam(model.parameters(), lr=self.learning_rate)
         elif self.optim == 'RMSprop':
@@ -316,6 +320,7 @@ class Experiment:
         else:
             print(self.model, ' is not valid name')
             raise ValueError
+            
         if self.cuda:
             model.cuda()
         self.train(model)
@@ -323,7 +328,8 @@ class Experiment:
 
     def k_vs_all_training_schema(self, model):
         print('k_vs_all_training_schema starts')
-
+        if self.cuda:
+            model.cuda()
         train_data_idxs = self.get_data_idxs(self.dataset.train_data)
         losses = []
 
@@ -363,7 +369,8 @@ class Experiment:
 
     def negative_sampling_training_schema(self, model):
         model.train()
-
+        if self.cuda:
+            model.cuda()
         print('negative_sampling_training_schema starts')
         train_data_idxs = np.array(self.get_data_idxs(self.dataset.train_data))
         losses = []
