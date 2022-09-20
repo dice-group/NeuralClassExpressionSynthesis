@@ -35,6 +35,7 @@ parser = argparse.ArgumentParser()
 parser.add_argument('--kbs', type=str, nargs='+', default=['carcinogenesis'], choices=['carcinogenesis', 'mutagenesis', 'semantic_bible', 'vicodi'],
                     help='Knowledge base name')
 parser.add_argument('--models', type=str, nargs='+', default=['SetTransformer', 'LSTM', 'GRU'], help='Neural models')
+parser.add_argument('--kb_emb_model', type=str, default='TransE', help='Embedding model name')
 parser.add_argument('--load_pretrained', type=str2bool, default=False, help='Whether to load the pretrained model on carcinogenesis')
 parser.add_argument('--learner_name', type=str, default="SetTransformer", choices=['LSTM', 'GRU', 'SetTransformer'], help='Neural model')
 parser.add_argument('--knowledge_base_path', type=str, default="", help='Path to KB owl file')
@@ -79,7 +80,7 @@ for kb in args.kbs:
         data_test = json.load(file)
         
     args.knowledge_base_path = f"datasets/{kb}/{kb}.owl"
-    args.path_to_csv_embeddings = f"datasets/{kb}/Embeddings/ConEx_entity_embeddings.csv"
+    args.path_to_csv_embeddings = f"datasets/{kb}/Embeddings/{args.kb_emb_model}_entity_embeddings.csv"
     experiment = Experiment(args)
     setattr(experiment, 'kb', kb)
     data_train, data_test = list(data_train.items()), list(data_test.items())
@@ -92,5 +93,5 @@ for kb in args.kbs:
         test = False
         cross_validate = False
     experiment.train_all_nets(args.models, data_train, data_test, epochs=args.epochs, batch_size=args.batch_size, kf_n_splits=10, 
-                              cross_validate=cross_validate, test=test, save_model = args.save_model,
+                              cross_validate=cross_validate, test=test, save_model = args.save_model, kb_emb_model=args.kb_emb_model,
                               optimizer = args.opt, record_runtime=True, final=final)

@@ -111,7 +111,7 @@ class Experiment:
     def map_to_token(self, idx_array):
         return self.cs.model.inv_vocab[idx_array]
     
-    def train(self, train_dataloader, test_dataloader, epochs=200, kf_n_splits=10, test=False, save_model = False, optimizer = 'Adam', record_runtime=False, final=False):
+    def train(self, train_dataloader, test_dataloader, epochs=200, kf_n_splits=10, test=False, save_model = False, kb_emb_model="TransE", optimizer = 'Adam', record_runtime=False, final=False):
         device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
         model_size = self.show_num_learnable_params()
         train_on_gpu = torch.cuda.is_available()
@@ -132,7 +132,7 @@ class Experiment:
                 print("\n")
                 print("**** Could not load from pretrained, missing file ****\n")
         synthesizer = copy.deepcopy(self.cs.model)
-        desc = synthesizer.name
+        desc = kb_emb_model+'_'+synthesizer.name
         if final:
             desc = desc+'_final'
         if train_on_gpu:
@@ -225,7 +225,7 @@ class Experiment:
         return plot_data
         
     
-    def cross_validate(self, train_data, test_dataloader, epochs=200, batch_size=64, kf_n_splits=10, test=False, save_model = False, optimizer = 'Adam', *kwargs):            
+    def cross_validate(self, train_data, test_dataloader, epochs=200, batch_size=64, kf_n_splits=10, test=False, save_model = False, kb_emb_model='TransE', optimizer = 'Adam', *kwargs):            
         train_on_gpu = torch.cuda.is_available()
         if not train_on_gpu:
             print("Training on CPU, it may take long...")
@@ -355,18 +355,18 @@ class Experiment:
                               "Val Min Avg Loss": min(plot_data[5])})
         if not os.path.exists(base_path+f"datasets/{self.kb}/Results/"):
             os.mkdir(base_path+f"datasets/{self.kb}/Results/")
-        with open(base_path+f"datasets/{self.kb}/Results/"+"Train_Results_"+synthesizer.name+".json", "w") as file:
+        with open(base_path+f"datasets/{self.kb}/Results/"+"Train_Results_"+kb_emb_model+'_'+synthesizer.name+".json", "w") as file:
                 json.dump(results_dict, file, indent=3)
 
         if save_model:
             if not os.path.exists(base_path+f"datasets/{self.kb}/Model_weights/"):
                 os.mkdir(base_path+f"datasets/{self.kb}/Model_weights/")
-            torch.save(synthesizer, base_path+f"datasets/{self.kb}/Model_weights/"+synthesizer.name+".pt")
+            torch.save(synthesizer, base_path+f"datasets/{self.kb}/Model_weights/"+kb_emb_model+'_'+synthesizer.name+".pt")
             print("{} saved".format(synthesizer.name))
         return plot_data
     
     
-    def train_and_eval(self, train_data, test_data, epochs=200, batch_size=64, kf_n_splits=10, cross_validate=False, test=False, save_model = False, optimizer = 'Adam', record_runtime=False, final=False):
+    def train_and_eval(self, train_data, test_data, epochs=200, batch_size=64, kf_n_splits=10, cross_validate=False, test=False, save_model = False, kb_emb_model='TransE', optimizer='Adam', record_runtime=False, final=False):
         
         """
         function for training a concept length learner in DL KBs
@@ -378,12 +378,12 @@ class Experiment:
         """
         if cross_validate:
             return self.cross_validate(train_data, test_data, epochs, batch_size,
-                                       kf_n_splits, test, save_model, optimizer, record_runtime, final)
+                                       kf_n_splits, test, save_model, kb_emb_model, optimizer, record_runtime, final)
         else:
             return self.train(train_data, test_data, epochs,
-                    kf_n_splits, test, save_model, optimizer, record_runtime, final)
+                    kf_n_splits, test, save_model, kb_emb_model, optimizer, record_runtime, final)
             
-    def train_all_nets(self, List_nets, train_data, test_data, epochs=200, batch_size=64, kf_n_splits=10, cross_validate=False, test=False, save_model = False, optimizer = 'Adam', record_runtime=False, final=False):
+    def train_all_nets(self, List_nets, train_data, test_data, epochs=200, batch_size=64, kf_n_splits=10, cross_validate=False, test=False, save_model = False, kb_emb_model='TransE', optimizer = 'Adam', record_runtime=False, final=False):
         self.embeddings = self.cs.get_embedding()
         train_dataset = CSDataLoader(train_data, self.embeddings, self.kwargs)
         test_dataset = CSDataLoader(test_data, self.embeddings, self.kwargs)
@@ -398,8 +398,8 @@ class Experiment:
             for net in List_nets:
                 self.cs.learner_name = net
                 self.cs.refresh()
-                train_soft_acc, train_hard_acc, val_soft_acc, val_hard_acc, train_l, val_l = self.train_and_eval(train_data, test_dataloader, epochs, batch_size, kf_n_splits, cross_validate, test, save_model, optimizer, record_runtime, final)
-                with open(base_path+f"datasets/{self.kb}/Plot_data/{net}_plot_data_with_val.json", "w") as plot_file:
+                train_soft_acc, train_hard_acc, val_soft_acc, val_hard_acc, train_l, val_l = self.train_and_eval(train_data, test_dataloader, epochs, batch_size, kf_n_splits, cross_validate, test, save_model, kb_emb_model, optimizer, record_runtime, final)
+                with open(base_path+f"datasets/{self.kb}/Plot_data/{kb_emb_model}_{net}_plot_data_with_val.json", "w") as plot_file:
                     json.dump({'train': {"soft acc": list(train_soft_acc), "hard acc": list(train_hard_acc), "loss": list(train_l)},
                                'val': {"soft acc": list(val_soft_acc), "hard acc": list(val_hard_acc), "loss": list(val_l)}},
                                 plot_file, indent=3)
@@ -410,7 +410,7 @@ class Experiment:
                 print()
                 print('Learner: ', self.cs.learner_name)
                 self.cs.refresh()
-                train_soft_acc, train_hard_acc, train_l = self.train_and_eval(train_dataloader, test_dataloader, epochs, batch_size, kf_n_splits, cross_validate, test, save_model, optimizer, record_runtime, final)
+                train_soft_acc, train_hard_acc, train_l = self.train_and_eval(train_dataloader, test_dataloader, epochs, batch_size, kf_n_splits, cross_validate, test, save_model,  kb_emb_model, optimizer, record_runtime, final)
                 with open(base_path+f"datasets/{self.kb}/Plot_data/{net}_plot_data.json", "w") as plot_file:
                     json.dump({"soft acc": list(train_soft_acc), "hard acc": list(train_hard_acc), "loss": list(train_l)}, plot_file, indent=3)
 

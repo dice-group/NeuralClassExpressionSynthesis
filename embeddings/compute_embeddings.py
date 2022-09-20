@@ -38,7 +38,7 @@ def str2bool(v):
 if __name__ == '__main__':
     folders = [f for f in os.listdir("../datasets") if not f.startswith('.')]
     parser = argparse.ArgumentParser()
-    parser.add_argument('--model_name', type=str, default='ConEx')
+    parser.add_argument('--model_name', type=str, default='TransE')
     parser.add_argument('--num_of_epochs', type=int, default=100)
     parser.add_argument('--batch_size', type=int, default=512)
     parser.add_argument('--scoring_technique', default='KvsAll',
