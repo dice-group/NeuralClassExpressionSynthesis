@@ -216,8 +216,6 @@ class Experiment:
         """
         trained model
         """
-        if self.cuda:
-            model.cuda()
         if self.dataset.train_data:
             if self.kwargs['scoring_technique'] == 'KvsAll':
                 results = self.evaluate_one_to_n(model, self.dataset.train_data,
@@ -239,8 +237,6 @@ class Experiment:
         """
         Validation
         """
-        if self.cuda:
-            model.cuda()
         model.eval()
         if self.dataset.valid_data:
             if self.kwargs['scoring_technique'] == 'KvsAll':
@@ -321,15 +317,11 @@ class Experiment:
             print(self.model, ' is not valid name')
             raise ValueError
             
-        if self.cuda:
-            model.cuda()
         self.train(model)
         self.eval(model)
 
     def k_vs_all_training_schema(self, model):
         print('k_vs_all_training_schema starts')
-        if self.cuda:
-            model.cuda()
         train_data_idxs = self.get_data_idxs(self.dataset.train_data)
         losses = []
 
@@ -369,8 +361,6 @@ class Experiment:
 
     def negative_sampling_training_schema(self, model):
         model.train()
-        if self.cuda:
-            model.cuda()
         print('negative_sampling_training_schema starts')
         train_data_idxs = np.array(self.get_data_idxs(self.dataset.train_data))
         losses = []
@@ -409,7 +399,8 @@ class Experiment:
                 r = torch.cat((r, r_head_corr, r_tail_corr), 0)
                 t = torch.cat((t, t_head_corr, t_tail_corr), 0)
                 label = torch.cat((label, label_head_corr, label_tail_corr), 0)
-
+                if self.cuda:
+                    h, r, t, label = h.cuda(), r.cuda(), t.cuda(), label.cuda()
                 self.optimizer.zero_grad()
                 batch_loss = model.forward_triples_and_loss(h, r, t, label)
                 loss_of_epoch += batch_loss.item()
