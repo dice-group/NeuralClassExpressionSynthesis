@@ -1,6 +1,9 @@
 import json
 from .data import Data
 from .helper_funcs import *
+import sys, os
+currentpath = os.path.dirname(os.path.realpath(__file__))
+sys.path.append(currentpath.split("util")[0])
 from models.complex_models import Complex, ConEx
 from models.real_models import Distmult, Tucker
 from torch.optim.lr_scheduler import ExponentialLR
