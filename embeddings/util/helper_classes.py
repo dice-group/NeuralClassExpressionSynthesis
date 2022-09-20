@@ -1,6 +1,6 @@
 import json
-from util.data import Data
-from util.helper_funcs import *
+from .data import Data
+from .helper_funcs import *
 from models.complex_models import Complex, ConEx
 from models.real_models import Distmult, Tucker
 from torch.optim.lr_scheduler import ExponentialLR
