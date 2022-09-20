@@ -1,12 +1,10 @@
 import json
 
 import torch
-#sys.path.append("../models/")
-
 from .helper_funcs import *
 from .helper_classes import *
-from models.complex_models import *
-from models.real_models import *
+from .complex_models import *
+from .real_models import *
 from torch.optim.lr_scheduler import ExponentialLR
 from collections import defaultdict
 from torch.utils.data import DataLoader
