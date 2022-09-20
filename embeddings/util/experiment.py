@@ -174,6 +174,8 @@ class Experiment:
 
             all_entities = torch.arange(0, len(self.entity_idxs)).long()
             all_entities = all_entities.reshape(len(all_entities), )
+            if self.cuda:
+                all_entities = all_entities.cuda()
             predictions = model.forward_triples(e1_idx=e1_idx.repeat(len(self.entity_idxs), ),
                                                 rel_idx=rel_idx.repeat(len(self.entity_idxs), ),
                                                 e2_idx=all_entities)
