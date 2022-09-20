@@ -320,7 +320,10 @@ class Experiment:
             raise ValueError
             
         self.train(model)
-        self.eval(model)
+        if not 'vicodi' in self.dataset.info['dataset'] and not 'carcinogenesis' in self.dataset.info['dataset']:
+            self.eval(model)
+        else:
+            print('\n## No evaluation on large datasets, skipping ##\n')
 
     def k_vs_all_training_schema(self, model):
         print('k_vs_all_training_schema starts')
