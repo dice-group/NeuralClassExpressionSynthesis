@@ -316,6 +316,8 @@ class Experiment:
         else:
             print(self.model, ' is not valid name')
             raise ValueError
+        if self.cuda:
+            model.cuda()
         self.train(model)
         self.eval(model)
 
