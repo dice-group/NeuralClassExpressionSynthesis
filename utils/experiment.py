@@ -411,7 +411,7 @@ class Experiment:
                 print('Learner: ', self.cs.learner_name)
                 self.cs.refresh()
                 train_soft_acc, train_hard_acc, train_l = self.train_and_eval(train_dataloader, test_dataloader, epochs, batch_size, kf_n_splits, cross_validate, test, save_model,  kb_emb_model, optimizer, record_runtime, final)
-                with open(base_path+f"datasets/{self.kb}/Plot_data/{net}_plot_data.json", "w") as plot_file:
+                with open(base_path+f"datasets/{self.kb}/Plot_data/{kb_emb_model}_{net}_plot_data.json", "w") as plot_file:
                     json.dump({"soft acc": list(train_soft_acc), "hard acc": list(train_hard_acc), "loss": list(train_l)}, plot_file, indent=3)
 
             
