@@ -1,4 +1,4 @@
-from metrics import Accuracy, F1
+from .metrics import Accuracy, F1
 
 class Evaluator:
     def __init__(self, kb):
