@@ -31,7 +31,7 @@ def parse_output(kb):
 if __name__ == '__main__':
     import argparse
     parser = argparse.ArgumentParser()
-    parser.add_argument('--kbs', type=str, nargs='+', default=['family-benchmark', 'semantic_bible', 'mutagenesis', 'carcinogenesis', 'vicodi'])
+    parser.add_argument('--kbs', type=str, nargs='+', default=['semantic_bible', 'mutagenesis', 'carcinogenesis', 'vicodi'])
     args = parser.parse_args()
     for kb in args.kbs:
         print(f'Parsing ECCI output on {kb}\n')

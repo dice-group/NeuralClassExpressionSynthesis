@@ -18,7 +18,7 @@ if __name__ == '__main__':
     import argparse
     parser = argparse.ArgumentParser()
     parser.add_argument('--algo', type=str, nargs='+', default=['ocel', 'celoe', 'eltl'], help='The algorithm to be used')
-    parser.add_argument('--kbs', type=str, nargs='+', default=['family-benchmark', 'semantic_bible', 'mutagenesis', 'carcinogenesis', 'vicodi'], \
+    parser.add_argument('--kbs', type=str, nargs='+', default=['semantic_bible', 'mutagenesis', 'carcinogenesis', 'vicodi'], \
                        help='The knowledge bases of interest')
     parser.add_argument('--max_runtime', type=int, default=300, help='The maximum runtime of CELOE')
     args = parser.parse_args()
@@ -63,7 +63,6 @@ if __name__ == '__main__':
                     Result_dict['F-measure'].append(best_pred_algo['F-measure'])
                 Result_dict['Accuracy'].append(best_pred_algo['Accuracy'])
                 if not 'Runtime' in best_pred_algo or best_pred_algo['Runtime'] is None:
-                    Result_dict['Prediction'].append('None')
                     Result_dict['Runtime'].append(duration)
                 else:
                     Result_dict['Runtime'].append(best_pred_algo['Runtime'])

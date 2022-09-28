@@ -35,7 +35,7 @@ parser = argparse.ArgumentParser()
 parser.add_argument('--kbs', type=str, nargs='+', default=['carcinogenesis'], choices=['carcinogenesis', 'mutagenesis', 'semantic_bible', 'vicodi'],
                     help='Knowledge base name')
 parser.add_argument('--models', type=str, nargs='+', default=['SetTransformer', 'LSTM', 'GRU'], help='Neural models')
-parser.add_argument('--kb_emb_model', type=str, default='TransE', help='Embedding model name')
+parser.add_argument('--kb_emb_model', type=str, default='ConEx', help='Embedding model name')
 parser.add_argument('--load_pretrained', type=str2bool, default=False, help='Whether to load the pretrained model on carcinogenesis')
 parser.add_argument('--learner_name', type=str, default="SetTransformer", choices=['LSTM', 'GRU', 'SetTransformer'], help='Neural model')
 parser.add_argument('--knowledge_base_path', type=str, default="", help='Path to KB owl file')
