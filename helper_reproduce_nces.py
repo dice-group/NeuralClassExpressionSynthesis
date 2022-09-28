@@ -4,7 +4,6 @@ from utils.evaluator import Evaluator
 from ontolearn.knowledge_base import KnowledgeBase
 from nces import BaseConceptSynthesis
 from nces.synthesizer import ConceptSynthesizer
-from utils.data import Data
 from owlapy.parser import DLSyntaxParser
 from dataloader import CSDataLoader
 from torch.utils.data import DataLoader
