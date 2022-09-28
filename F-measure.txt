@@ -1,0 +1,16 @@
+\begin{tabular}{@{}lccccccc@{}}
+		\toprule
+		& \multicolumn{4}{c}{$F-measure(\%)$}\\
+		&\textbf{Carcinogenesis} & \textbf{Mutagenesis} & \textbf{Semantic Bible} & \textbf{Vicodi}\\
+\midrule
+		CELOE & 59.06$\pm$38.61 & 96.43$\pm$15.81 & 95.04$\pm$9.5 & 63.69$\pm$30.18\\
+		ELTL & 40.36$\pm$31.94 & 33.06$\pm$31.22 & 40.91$\pm$30.56 & 40.98$\pm$32.07\\
+		ECII & 33.1$\pm$37.12 & 26.37$\pm$35.45 & 48.25$\pm$36.37 & 89.08$\pm$15.86\\
+		EvoLearner & 85.19$\pm$21.51 & 95.18$\pm$6.19 & 87.82$\pm$12.56 & 87.62$\pm$12.58\\
+		\textbf{$\textbf{NCES}_{LSTM}$} & 82.46$\pm$25.41 & 67.11$\pm$45.87 & 79.15$\pm$29.08 & 84.0$\pm$28.05\\
+		\textbf{$\textbf{NCES}_{GRU}$} & 86.53$\pm$26.27 & 64.21$\pm$44.75 & 78.62$\pm$26.56 & 85.82$\pm$28.31\\
+		\textbf{$\textbf{NCES}_{ST}$} & 85.44$\pm$27.92 & 88.97$\pm$25.35 & 79.05$\pm$21.34 & 88.76$\pm$24.0\\
+		\textbf{$\textbf{NCES}_{ST+GRU}$} & 97.11$\pm$9.6 & 90.58$\pm$26.0 & 81.31$\pm$29.31 & 94.24$\pm$18.95\\
+		\textbf{$\textbf{NCES}_{ST+LSTM}$} & 93.94$\pm$16.34 & 97.97$\pm$3.58 & 79.96$\pm$26.5 & 95.42$\pm$13.74\\
+		\textbf{$\textbf{NCES}_{GRU+LSTM}$} & 87.74$\pm$24.07 & 82.2$\pm$30.62 & 81.07$\pm$26.03 & 92.04$\pm$20.62\\
+		\textbf{$\textbf{NCES}_{ST+GRU+LSTM}$} & 96.13$\pm$10.65 & 90.78$\pm$26.57 & 82.33$\pm$26.51 & 94.96$\pm$16.44\\
