@@ -18,9 +18,9 @@ conda env create -f environment.yml
 A conda environment (nces) will be created. Next activate the environment:
 ``` conda activate nces```
 
-Download Datasets from [drive](https://drive.google.com/file/d/16tmjo1OZ5MqY_JwXUg5Fj1WxfWtOXACe/view?usp=sharing), extract it into NeuralClassExpressionSynthesis/Method and rename the folder as Datasets
+Download datasets from [drive](https://drive.google.com/file/d/16tmjo1OZ5MqY_JwXUg5Fj1WxfWtOXACe/view?usp=sharing). Extract the zip file into NeuralClassExpressionSynthesis/ and if necessary, rename the folder as datasets
 
-To run search based algorithms CELOE, OCEL, ELTL and ECII, install Java 8+ and Maven 3.6.3+
+To run search based algorithms CELOE, ELTL and ECII, install Java 8+ and Maven 3.6.3+
 
 Dowload DL-Learner-1.4.0 from [github](https://github.com/SmartDataAnalytics/DL-Learner/releases) and extract it into the directory Method
 
@@ -31,66 +31,99 @@ Clone DL-Foil from [bitbucket](https://bitbucket.org/grizzo001/dl-foil.git) into
 ### NCES (Ours)
 
 
-*Open a terminal and navigate into Method/reproduce_results/* ``` cd NeuralClassExpressionSynthesis/Method/reproduce_results/```
-- Reproduce training NCES: ``` python reproduce_training_concept_synthesizer.py``` with the following options:
+*Open a terminal in NeuralClassExpressionSynthesis/*
+- Reproduce training NCES: ``` python train.py ``` optionally with the following options:
 
 ``` 
-  --kb KB               Knowledge base name, default carcinogenesis
-  --lr LR               Learning rate
+  --kbs {carcinogenesis,mutagenesis,semantic_bible,vicodi} [{carcinogenesis,mutagenesis,semantic_bible,vicodi} ...]
+                        Knowledge base name
+  --models MODELS [MODELS ...]
+                        Neural models
+  --kb_emb_model KB_EMB_MODEL
+                        Embedding model name
+  --load_pretrained LOAD_PRETRAINED
+                        Whether to load the pretrained model on carcinogenesis
+  --learner_name {LSTM,GRU,SetTransformer}
+                        Neural model
+  --knowledge_base_path KNOWLEDGE_BASE_PATH
+                        Path to KB owl file
+  --path_to_csv_embeddings PATH_TO_CSV_EMBEDDINGS
+                        KB embedding path
+  --learning_rate LEARNING_RATE
+                        Learning rate
+  --embedding_dim EMBEDDING_DIM
+                        Number of embedding dimensions
+  --input_size INPUT_SIZE
+                        Number of embedding dimensions in the input
   --num_workers NUM_WORKERS
                         Number of workers to use to load training data
-  --rnn_n_hidden RNN_N_HIDDEN
-                        Hidden size of recurrent neural networks
+  --proj_dim PROJ_DIM   The projection dimension for examples
+  --num_inds NUM_INDS   Number of induced instances
+  --num_heads NUM_HEADS
+                        Number of attention heads
+  --num_seeds NUM_SEEDS
+                        Number of seed components in the output
   --num_examples NUM_EXAMPLES
                         Total number of examples for concept learning
+  --ln LN               Whether to use layer normalization
   --decay_rate DECAY_RATE
                         Decay rate for the optimizer
   --grad_clip_value GRAD_CLIP_VALUE
                         Gradient clip value
-  --optimizer OPTIMIZER
-                        Name of the optimizer to use
-  --model MODEL         Name of the concept learner architecture to use (LSTM or GRU, default GRU)
-  --max_num_atom_repeat MAX_NUM_ATOM_REPEAT
-                        Maximum number of atom repetition in a given class expression
+  --opt OPT             Name of the optimizer to use
   --rnn_n_layers RNN_N_LAYERS
                         Number of recurrent network layers
-  --index_score_upper_bound INDEX_SCORE_UPPER_BOUND
-                        Upper bound for scoring atoms/tokens
-  --index_score_lower_bound_rate INDEX_SCORE_LOWER_BOUND_RATE
-                        Lower bound rate
+  --max_length MAX_LENGTH
+                        Maximum length of class expressions
   --drop_prob DROP_PROB
                         Dropout rate in neural networks
+  --epochs EPOCHS       Number of training epochs
+  --batch_size BATCH_SIZE
+                        Training batch size
+  --cross_validate CROSS_VALIDATE
+                        Whether to use a 10-fold cross-validation setting
+  --shuffle_examples SHUFFLE_EXAMPLES
+                        Whether to shuffle positive and negative examples in the dataloader
+  --test TEST           Whether to evaluate the concept synthesizer on the test data during training
+  --final FINAL         Whether to train the concept synthesizer on test+train data
+  --save_model SAVE_MODEL
+                        Whether to save the model after training
   ```
 
-- To reproduce evaluation results on concept learning, please open the jupyter notebook file ReproduceNCES.ipynb
+- To reproduce evaluation results on concept learning: ``` python reproduce_nces ```. Use -h for more options.
 
-*Remark: --kb is one of carcinogenesis, mutagenesis, family-benchmark, semantic_bible, vicodi*
+*Remark: --kb is one of carcinogenesis, mutagenesis, semantic_bible, vicodi*
 
 ### DL-Learner (Lehmann et al.)
 
-*Open a terminal and navigate into Method/dllearner/* ``` cd NeuralClassExpressionSynthesis/Method/dllearner/```
-- Reproduce CELOE, OCEL, and ELTL concept learning results: ``` python reproduce_dllearner_experiment.py --algo --kb --max_runtime --num_probs```
+*Open a terminal and navigate into dllearner/* ``` cd NeuralClassExpressionSynthesis/dllearner```
+- Reproduce CELOE and ELTL concept learning results: ``` python reproduce_dllearner_experiment.py --algo --kb --max_runtime ```
 
 ### DL-Foil (Fanizzi et al.)
 
-*Open a terminal and navigate into Method/dl-foil/* ``` cd NeuralClassExpressionSynthesis/Method/dl-foil/```
+*Open a terminal and navigate into dl-foil/* ``` cd NeuralClassExpressionSynthesis/dl-foil```
 
 - Run mvn package
 
-- Copy `generate_dlfoil_config_all_kbs.py` into dl-foil and run `python generate_dlfoil_config_all_kbs.py` to prepare configuration files for all knowledge bases
+- Run ` python generate_dlfoil_config_all_kbs.py ` to prepare configuration files for all knowledge bases
 
 - Reproduce concept learning results: ` mvn -e exec:java -Dexec.mainClass=it.uniba.di.lacam.ml.DLFoilTest -Dexec.args=DL-Foil2/kb_config.xml `
 
 ### ECII (Sarker et al.)
 
-*Open a terminal and navigate into Method/ecii/* ``` cd NeuralClassExpressionSynthesis/Method/ecii/```
+*Open a terminal and navigate into ecii/* ``` cd NeuralClassExpressionSynthesis/ecii/```
 
-- Run `python generate_config_ecii.py --kb "knowledge base name(s)" ` to prepare configuration files
+- Run `python generate_config_ecii.py ` to prepare configuration files
 
 - To start concept learning, run `java -Xms2g -Xmx8g -Xss1g -jar ecii_v1.0.0.jar -b kb/`
 
-- Run `python parse_ecii_output.py --kb "knowledge base name(s)" ` to parse the output and save the results such as f_measure and runtime
+- Run `python parse_ecii_output.py ` to parse the output and save the results such as f_measure and runtime
 
-## Acknowledgement 
-We based our implementation on the open source implementation of [ontolearn](https://docs--ontolearn-docs-dice-group.netlify.app/). We would like to thank the Ontolearn team for the readable codebase.
+
+### EvoLearner (Heindorf et al.)
+
+*Open a terminal and navigate into evolearner/* ``` cd NeuralClassExpressionSynthesis/evolearner/```
+
+- Run `python run_evolearner.py `. Use options to select the knowledge base, save results, or enable logging. Example `python run_evolearner.py --kbs carcinogenesis --save_results True --verbose True` 
+
 
