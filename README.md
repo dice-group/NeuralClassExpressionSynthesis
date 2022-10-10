@@ -22,9 +22,9 @@ Download datasets from [drive](https://drive.google.com/file/d/1SJ2vuCjflJld8EEN
 
 To run search based algorithms CELOE, ELTL and ECII, install Java 8+ and Maven 3.6.3+
 
-Dowload DL-Learner-1.4.0 from [github](https://github.com/SmartDataAnalytics/DL-Learner/releases) and extract it into the directory Method
+Dowload DL-Learner-1.4.0 from [github](https://github.com/SmartDataAnalytics/DL-Learner/releases) and extract it into the directory NeuralClassExpressionSynthesis
 
-Clone DL-Foil from [bitbucket](https://bitbucket.org/grizzo001/dl-foil.git) into Method
+Clone DL-Foil from [bitbucket](https://bitbucket.org/grizzo001/dl-foil.git) into NeuralClassExpressionSynthesis
 
 ## Reproducing the reported results
 
