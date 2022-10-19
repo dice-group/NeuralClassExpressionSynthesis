@@ -127,3 +127,19 @@ Clone DL-Foil from [bitbucket](https://bitbucket.org/grizzo001/dl-foil.git) into
 - Run `python run_evolearner.py `. Use options to select the knowledge base, save results, or enable logging. Example `python run_evolearner.py --kbs carcinogenesis --save_results True --verbose True` 
 
 
+## Bring your own data
+
+To train NCES on a new knowledge base, create a new folder under datasets and add the OWL format of the knowledge base in the folder. Make sure the owl file has the same name as the folder you created. Follow the 3 steps below to train NCES on your knowledge base.
+
+- (1) Generating training data for NCES: `cd generators/` then ` python generate_data.py --kbs your_folder_name `. Use -h for more options. For example, use `--num_rand_samples 500` combined with `--refinement_expressivity 0.6` to increase the amount of training data.
+
+- (2) Computing an embedding for your knowledge base: `cd embeddings/` then ` python compute_embeddings.py --kbs your_folder_name --model_name ConEx `
+
+- (3) Training NCES on your data: `cd NeuralClassExpressionSynthesis/ ` then ` python train.py --kbs your_folder_name `. Use -h to see more options for training, e.g., `--batch_size` or `--epochs`
+
+
+## Start an interactive session with NCES (deployment)
+
+Run ` python deploy_nces.py ` in a terminal. Use -h for more options. A public link will be created and valid for 72 hours. Open the link in a navigator. Start running NCES as in the screenshot below.
+
+![deploy](nces_deployment.png)
