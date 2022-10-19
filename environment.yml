@@ -1,71 +1,71 @@
-name: nces
+name: secondment
 channels:
   - pytorch
-  - anaconda
   - conda-forge
   - defaults
 dependencies:
   - _libgcc_mutex
+  - _openmp_mutex
   - backcall
   - blas
+  - bottleneck
   - bzip2
   - ca-certificates
   - certifi
   - cudatoolkit
-  - cycler
-  - dbus
+  - debugpy
   - decorator
-  - expat
+  - entrypoints
   - ffmpeg
-  - fontconfig
   - freetype
-  - glib
+  - giflib
   - gmp
   - gnutls
-  - gst-plugins-base
-  - gstreamer
-  - icu
   - intel-openmp
   - ipykernel
   - ipython
   - ipython_genutils
   - jedi
-  - joblib
   - jpeg
-  - kiwisolver
+  - jupyter_client
+  - jupyter_core
   - lame
   - lcms2
   - ld_impl_linux-64
   - libffi
   - libgcc-ng
-  - libgfortran-ng
-  - libiconv
+  - libgomp
+  - libidn2
+  - libopus
   - libpng
   - libsodium
   - libstdcxx-ng
+  - libtasn1
   - libtiff
-  - libuuid
+  - libunistring
   - libuv
-  - libxcb
-  - libxml2
+  - libvpx
+  - libwebp
+  - libwebp-base
   - lz4-c
-  - matplotlib
-  - matplotlib-base
+  - matplotlib-inline
   - mkl
   - mkl-service
   - mkl_fft
   - mkl_random
   - ncurses
+  - nest-asyncio
   - nettle
   - ninja
+  - numexpr
   - numpy
   - numpy-base
   - olefile
   - openh264
+  - openjdk
   - openssl
   - pandas
   - parso
-  - pcre
   - pexpect
   - pickleshare
   - pillow
@@ -73,112 +73,129 @@ dependencies:
   - prompt-toolkit
   - ptyprocess
   - pygments
-  - pyparsing
-  - pyqt
   - python
+  - python-dateutil
   - python_abi
   - pytorch
   - pytz
-  - qt
+  - pyzmq
   - readline
-  - scikit-learn
-  - scipy
   - setuptools
-  - sip
   - six
-  - sortedcontainers
   - sqlite
-  - threadpoolctl
   - tk
   - torchaudio
   - torchvision
   - tornado
+  - traitlets
   - typing_extensions
   - tzdata
   - wcwidth
   - wheel
+  - x264
   - xz
   - zeromq
   - zlib
   - zstd
   - pip:
-    - aiohttp
-    - aiosignal
+    - alembic
     - argon2-cffi
-    - argon2-cffi-bindings
-    - async-timeout
     - attrs
+    - autopage
     - beautifulsoup4
     - bleach
     - cffi
-    - chardet
     - charset-normalizer
-    - datasets
+    - class-resolver
+    - click
+    - click-default-group
+    - cliff
+    - cmaes
+    - cmd2
+    - colorama
+    - colorlog
+    - cycler
+    - dataclasses-json
+    - deap
     - defusedxml
-    - dill
-    - docutils
-    - entrypoints
-    - fastjsonschema
+    - dgl
+    - dglke
+    - docdata
+    - et-xmlfile
     - filelock
-    - frozenlist
-    - fsspec
+    - fonttools
     - gdown
-    - gensim
-    - huggingface-hub
+    - greenlet
+    - grpcio
     - idna
     - iniconfig
-    - ipdb
     - ipywidgets
     - isodate
     - jinja2
+    - joblib
+    - json5
     - jsonschema
-    - jupyter-client
-    - jupyter-core
     - jupyterlab-pygments
     - jupyterlab-widgets
-    - kivy-garden
+    - kiwisolver
+    - mako
     - markupsafe
+    - marshmallow
+    - marshmallow-enum
+    - matplotlib
     - mistune
-    - multidict
-    - multiprocess
+    - more-click
+    - more-itertools
+    - msgpack
+    - mypy-extensions
     - nbclient
     - nbconvert
     - nbformat
-    - nest-asyncio
+    - networkx
     - notebook
+    - openpyxl
+    - optuna
     - owlready2
     - packaging
     - pandocfilters
+    - pbr
     - pluggy
+    - prettytable
     - prometheus-client
+    - protobuf
     - py
-    - pyarrow
     - pycparser
+    - pykeen
+    - pyparsing
+    - pyperclip
     - pyrsistent
     - pysocks
+    - pystow
     - pytest
-    - python-dateutil
-    - python-slugify
+    - python-json-logger
     - pyyaml
-    - pyzmq
     - rdflib
-    - regex
+    - reactome2py
+    - redis
     - requests
-    - responses
+    - scikit-learn
+    - scipy
+    - seaborn
     - send2trash
-    - sentencepiece
-    - smart-open
+    - setuptools-scm
+    - sklearn
     - soupsieve
+    - sqlalchemy
+    - stevedore
+    - tabulate
     - terminado
-    - text-unidecode
-    - tinycss2
-    - tokenizers
+    - testpath
+    - threadpoolctl
     - toml
+    - tomli
     - tqdm
-    - traitlets
-    - transformers
+    - typing-inspect
     - urllib3
     - webencodings
     - widgetsnbextension
-    - xxhash
-    - yarl
+    - xlrd
