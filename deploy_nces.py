@@ -42,7 +42,10 @@ def get_data(kb, embeddings, kwargs, num_lps, selected_lps=[]):
         data_test = json.load(file)
     num_lps = min(num_lps, len(data_test))
     if selected_lps == []:
-        data_test = random.sample(list(data_test.items()), num_lps)
+        if num_lps < len(data_test):
+            data_test = random.sample(list(data_test.items()), num_lps)
+        else:
+            data_test = list(data_test.items())
     else:
         data_test = [list(data_test.items())[i] for i in selected_lps]
     test_dataset = CSDataLoader(data_test, embeddings, kwargs)
