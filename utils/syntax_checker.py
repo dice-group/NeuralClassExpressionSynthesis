@@ -11,6 +11,8 @@ from tokenizers.trainers import BpeTrainer
 from tokenizers.pre_tokenizers import Whitespace, WhitespaceSplit
 from transformers import AutoTokenizer, PreTrainedTokenizerFast
 
+os.environ["TOKENIZERS_PARALLELISM"] = "false"
+
 class SyntaxChecker:
     '''-Python class for checking and validating/correcting/suggesting DL class expressions
        -Includes methods that can query the instances of a class expression and compute the f-measure w.r.t. positive and negative examples    

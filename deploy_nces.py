@@ -41,15 +41,8 @@ def get_data(kb, embeddings, kwargs, num_lps, selected_lps=[]):
     with open(data_test_path, "r") as file:
         data_test = json.load(file)
     num_lps = min(num_lps, len(data_test))
-    if selected_lps == []:
-        if num_lps < len(data_test):
-            data_test = random.sample(list(data_test.items()), num_lps)
-        else:
-            data_test = list(data_test.items())
-    else:
-        data_test = [list(data_test.items())[i] for i in selected_lps]
+    data_test = [list(data_test.items())[i] for i in selected_lps]
     test_dataset = CSDataLoader(data_test, embeddings, kwargs)
-    print("Number of learning problems: ", len(test_dataset))
     test_dataloader = DataLoader(test_dataset, batch_size=kwargs.batch_size, num_workers=kwargs.num_workers, collate_fn=collate_batch, shuffle=False)
     return data_test, test_dataloader
 
@@ -93,26 +86,39 @@ def launch_service(nces_model: Union[List,str], kb, kwargs):
         embeddings = pd.read_csv(f"datasets/{kb}/Embeddings/ConEx_entity_embeddings.csv").set_index('Unnamed: 0')
         kwargs.knowledge_base_path = "datasets/"+f"{kb}/{kb}.owl"
         if random_problems:
-            dataset, dataloader = get_data(kb, embeddings, kwargs, number_of_leaning_problems, [])
+            input_ids = random.sample(list(range(max_num_lps)), number_of_leaning_problems)
+            if number_of_leaning_problems<32:
+                temp_input_ids = input_ids + random.sample(list(set(range(max_num_lps))-set(input_ids)), 32)
+            else:
+                temp_input_ids = input_ids
+            dataset, dataloader = get_data(kb, embeddings, kwargs, number_of_leaning_problems, temp_input_ids)
         else:
-            dataset, dataloader = get_data(kb, embeddings, kwargs, number_of_leaning_problems, [int(idx) for idx in lp_ids.split(",")])
+            input_ids = [int(idx) for idx in lp_ids.split(",")]
+            if len(input_ids)<32:
+                temp_input_ids = input_ids + random.sample(list(set(range(max_num_lps))-set(input_ids)), 32)
+            else:
+                temp_input_ids = input_ids
+            dataset, dataloader = get_data(kb, embeddings, kwargs, number_of_leaning_problems, temp_input_ids)
         pos_emb, neg_emb, _ = next(iter(dataloader))
         if isinstance(nces_model, str):
             predictions, _ = predict_single(nces_model, pos_emb, neg_emb)
         else:
             predictions, _ = predict_ensemble(nces_model, pos_emb, neg_emb)
-        results = list(map(lambda pred: before_pad(pred), predictions))
+        results = list(map(lambda pred: before_pad(pred), predictions[:len(input_ids)]))
+        print("\nNumber of learning problems: ", len(input_ids), "\n")
         ## Evaluate solutions
         out_text = ""
-        output_results = {"Index": list(range(1,number_of_leaning_problems+1)), "Prediction": [], "Acc": [], "F1": []}
+        output_results = {"IDs": input_ids, "Prediction": [], "Acc": [], "F1": []}
         KB = KnowledgeBase(path=f"datasets/{kb}/{kb}.owl")
         evaluator = Evaluator(KB)
         syntax_checker = SyntaxChecker(KB)
         renderer = DLSyntaxObjectRenderer()
         All_individuals = set(KB.individuals())
         namespace = KB.ontology()._onto.base_iri
+        if kb == 'vicodi':
+            namespace = 'http://vicodi.org/ontology#'
         dl_parser = DLSyntaxParser(namespace = namespace)
-        for i in range(len(dataset)):
+        for i in range(len(results)):
             target_expr, examples = dataset[i]
             prediction_str = results[i]
             try:
@@ -129,18 +135,20 @@ def launch_service(nces_model: Union[List,str], kb, kwargs):
             output_results["Prediction"].append(prediction_str)
             output_results["Acc"].append(acc)
             output_results["F1"].append(f1)
-            out_text += f"|E^+|={len(examples['positive examples'])}:{'['+','.join(examples['positive examples'][:5])+',...]'}\n|E^-|={len(examples['negative examples'])}:{'['+','.join(examples['negative examples'][:5])+',...]'}\n\n"
+            pos = list(map(lambda x: namespace+x.split('#')[-1],examples['positive examples'][:5]))
+            neg = list(map(lambda x: namespace+x.split('#')[-1], examples['negative examples'][:5]))
+            out_text += f"ID: {input_ids[i]}\n" + f"|E^+|={len(pos)}:{'['+','.join(pos)+',...]'}\n|E^-|={len(neg)}:{'['+','.join(neg)+',...]'}\n\n"
             
         return out_text, pd.DataFrame(output_results)
     #return predict([], number_of_leaning_problems=1, random_problems=True)
     gr.Interface(
         fn=predict,
-        inputs=[gr.inputs.Textbox(lines=5, placeholder=None, label=f'Learning Problem IDs on {kb.upper()} KB (ID<{max_num_lps})'),
-                gr.inputs.Slider(minimum=5, maximum=128),
+        inputs=[gr.inputs.Textbox(lines=5, placeholder=None, label=f'Learning Problem IDs on Test Set for {kb.upper()} KB (ID<{max_num_lps})'),
+                gr.inputs.Slider(minimum=1, maximum=128),
                 "checkbox"],
         outputs=[gr.outputs.Textbox(label='Learning Problem'), gr.outputs.Dataframe(label='Predictions')],
         title='Neural Class Expression Synthesis (NCES)',
-        description='Select random_problems and submit or enter at least 5 learning problem IDs separated with a comma').launch(share=True)
+        description='Select random_problems and submit or enter learning problem IDs (separated with a comma if many)').launch(share=True)
 
 
 def str2bool(v):

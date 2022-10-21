@@ -106,11 +106,10 @@ class KBToDataForConceptSynthesis:
               
             
 import argparse
-
+from embedding_triples import RDFTriples
 parser = argparse.ArgumentParser()
 
-parser.add_argument('--kbs', type=str, nargs='+', default=['carcinogenesis'], choices=['carcinogenesis', 'mutagenesis',\
-                    'semantic_bible', 'vicodi', 'premierleague', 'hepatitis'], help='Knowledge base name')
+parser.add_argument('--kbs', type=str, nargs='+', default=['carcinogenesis'], help='Knowledge base name')
 parser.add_argument('--num_rand_samples', type=int, default=10, help='The number of random samples at each step of the generation process')
 parser.add_argument('--depth', type=int, default=6, help='The depth of refinements')
 parser.add_argument('--max_child_len', type=int, default=8, help='Maximum child length')
@@ -121,5 +120,7 @@ parser.add_argument('--rho', type=str, default='ExpressRefinement', choices=['Ex
 args = parser.parse_args()
 
 for kb in args.kbs:
+    triples = RDFTriples(source_kg_path=f'../datasets/{kb}/{kb}.owl')
+    triples.export_triples()
     DataGen = KBToDataForConceptSynthesis(path=f'../datasets/{kb}/{kb}.owl', rho_name=args.rho, depth=args.depth, max_child_length=args.max_child_len, refinement_expressivity=args.refinement_expressivity, downsample_refinements=True, num_rand_samples=args.num_rand_samples, min_num_pos_examples=1, max_num_pos_examples=args.max_num_pos_examples)
     DataGen.generate_descriptions().save_data()
