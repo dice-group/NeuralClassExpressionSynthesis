@@ -137,7 +137,7 @@ def launch_service(nces_model: Union[List,str], kb, kwargs):
             output_results["F1"].append(f1)
             pos = list(map(lambda x: namespace+x.split('#')[-1],examples['positive examples'][:5]))
             neg = list(map(lambda x: namespace+x.split('#')[-1], examples['negative examples'][:5]))
-            out_text += f"ID: {input_ids[i]}\n" + f"|E^+|={len(pos)}:{'['+','.join(pos)+',...]'}\n|E^-|={len(neg)}:{'['+','.join(neg)+',...]'}\n\n"
+            out_text += f"ID: {input_ids[i]}\n" + f"|E^+|={len(examples['positive examples'])}: {'['+','.join(pos)+',...]'}\n|E^-|={len(examples['negative examples'])}: {'['+','.join(neg)+',...]'}\n\n"
             
         return out_text, pd.DataFrame(output_results)
     #return predict([], number_of_leaning_problems=1, random_problems=True)
