@@ -142,7 +142,7 @@ def evaluate_nces(kb_name, models, args, save_results=False, verbose=False):
         namespace = 'http://vicodi.org/ontology#'
     print("KB namespace: ", namespace)
     print()
-    syntax_checker = SyntaxChecker(kb)
+    simpleSolution = SimpleSolution(kb)
     evaluator = Evaluator(kb)
     dl_parser = DLSyntaxParser(namespace = namespace)
     All_individuals = set(kb.individuals())
@@ -160,49 +160,14 @@ def evaluate_nces(kb_name, models, args, save_results=False, verbose=False):
             except IndexError:
                 end_idx = 1
             pred = predictions[i][:end_idx]
-            #print("Before parsing: ", pred.sum())
-            succeed = False
-            if (pred=='(').sum() > (pred==')').sum():
-                for i in range(len(pred))[::-1]:
-                    try:
-                        prediction = dl_parser.parse_expression("".join(pred.tolist().insert(i,')')))
-                        succeed = True
-                        break
-                    except Exception:
-                        pass
-                if not succeed:
-                    try:
-                        pred = syntax_checker.correct(predictions[i].sum())
-                        pred = list(syntax_checker.get_suggestions(pred))[-1]
-                        prediction = syntax_checker.get_concept(pred)
-                    except Exception:
-                        print(f"Could not understand expression {pred}")
-                        
-            elif (pred==')').sum() > (pred=='(').sum():
-                for i in range(len(pred)):
-                    try:
-                        prediction = dl_parser.parse_expression("".join(pred.tolist().insert(i,'(')))
-                        succeed = True
-                        break
-                    except Exception:
-                        pass
-                if not succeed:
-                    try:
-                        pred = syntax_checker.correct(predictions[i].sum())
-                        pred = list(syntax_checker.get_suggestions(pred))[-1]
-                        prediction = syntax_checker.get_concept(pred)
-                    except Exception:
-                        print(f"Could not understand expression {pred}")
-            else:
+            try:
+                prediction = dl_parser.parse_expression("".join(pred.tolist()))
+            except Exception:
                 try:
-                    prediction = dl_parser.parse_expression("".join(pred.tolist()))
+                    pred = simpleSolution.correct(predictions[i].sum())
+                    prediction = dl_parser.parse_expression(pred)
                 except Exception:
-                    try:
-                        pred = syntax_checker.correct(predictions[i].sum())
-                        pred = list(syntax_checker.get_suggestions(pred))[-1]
-                        prediction = syntax_checker.get_concept(pred)
-                    except Exception:
-                        print(f"Could not understand expression {pred}")
+                    print(f"Could not understand expression {pred}")
             if prediction is None:
                 prediction = dl_parser.parse_expression('⊤')
             target_expression = dl_parser.parse_expression(pb_str) # The target class expression
@@ -213,10 +178,10 @@ def evaluate_nces(kb_name, models, args, save_results=False, verbose=False):
             except Exception as err:
                 print(err)
             if verbose:
-                print(f'Problem {i}, Target: {pb_str}, Prediction: {syntax_checker.renderer.render(prediction)}, Acc: {acc}, F1: {f1}')
+                print(f'Problem {i}, Target: {pb_str}, Prediction: {simpleSolution.renderer.render(prediction)}, Acc: {acc}, F1: {f1}')
                 print()
             All_metrics[model_name]['acc']['values'].append(acc)
-            All_metrics[model_name]['prediction']['values'].append(syntax_checker.renderer.render(prediction))
+            All_metrics[model_name]['prediction']['values'].append(simpleSolution.renderer.render(prediction))
             All_metrics[model_name]['f1']['values'].append(f1)
             All_metrics[model_name]['time']['values'].append(duration)
             
@@ -252,7 +217,7 @@ def evaluate_ensemble(kb_name, args, save_results=False, verbose=False):
         namespace = 'http://vicodi.org/ontology#'
     print("KB namespace: ", namespace)
     print()
-    syntax_checker = SyntaxChecker(kb)
+    simpleSolution = SimpleSolution(kb)
     evaluator = Evaluator(kb)
     dl_parser = DLSyntaxParser(namespace = namespace)
     All_individuals = set(kb.individuals())
@@ -270,48 +235,14 @@ def evaluate_ensemble(kb_name, args, save_results=False, verbose=False):
             except IndexError:
                 end_idx = 1
             pred = predictions[i][:end_idx]
-            #print("Before parsing: ", pred.sum())
-            succeed = False
-            if (pred=='(').sum() > (pred==')').sum():
-                for i in range(len(pred))[::-1]:
-                    try:
-                        prediction = dl_parser.parse_expression("".join(pred.tolist().insert(i,')')))
-                        succeed = True
-                        break
-                    except Exception:
-                        pass
-                if not succeed:
-                    try:
-                        pred = syntax_checker.correct(predictions[i].sum())
-                        pred = list(syntax_checker.get_suggestions(pred))[-1]
-                        prediction = syntax_checker.get_concept(pred)
-                    except Exception:
-                        print(f"Could not understand expression {pred}")
-            elif (pred==')').sum() > (pred=='(').sum():
-                for i in range(len(pred)):
-                    try:
-                        prediction = dl_parser.parse_expression("".join(pred.tolist().insert(i,'(')))
-                        succeed = True
-                        break
-                    except Exception:
-                        pass
-                if not succeed:
-                    try:
-                        pred = syntax_checker.correct(predictions[i].sum())
-                        pred = list(syntax_checker.get_suggestions(pred))[-1]
-                        prediction = syntax_checker.get_concept(pred)
-                    except Exception:
-                        print(f"Could not understand expression {pred}")
-            else:
+            try:
+                prediction = dl_parser.parse_expression("".join(pred.tolist()))
+            except Exception:
                 try:
-                    prediction = dl_parser.parse_expression("".join(pred.tolist()))
+                    pred = simpleSolution.correct(predictions[i].sum())
+                    prediction = dl_parser.parse_expression(pred)
                 except Exception:
-                    try:
-                        pred = syntax_checker.correct(predictions[i].sum())
-                        pred = list(syntax_checker.get_suggestions(pred))[-1]
-                        prediction = syntax_checker.get_concept(pred)
-                    except Exception:
-                        print(f"Could not understand expression {pred}")
+                    print(f"Could not understand expression {pred}")
             if prediction is None:
                 prediction = dl_parser.parse_expression('⊤')
             target_expression = dl_parser.parse_expression(pb_str) # The target class expression
@@ -322,10 +253,10 @@ def evaluate_ensemble(kb_name, args, save_results=False, verbose=False):
             except Exception as err:
                 print(err)
             if verbose:
-                print(f'Problem {i}, Target: {pb_str}, Prediction: {syntax_checker.renderer.render(prediction)}, Acc: {acc}, F1: {f1}')
+                print(f'Problem {i}, Target: {pb_str}, Prediction: {simpleSolution.renderer.render(prediction)}, Acc: {acc}, F1: {f1}')
                 print()
             All_metrics[combine]['acc']['values'].append(acc)
-            All_metrics[combine]['prediction']['values'].append(syntax_checker.renderer.render(prediction))
+            All_metrics[combine]['prediction']['values'].append(simpleSolution.renderer.render(prediction))
             All_metrics[combine]['f1']['values'].append(f1)
             All_metrics[combine]['time']['values'].append(duration)
 

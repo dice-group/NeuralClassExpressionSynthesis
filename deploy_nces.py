@@ -16,7 +16,7 @@ from torch.utils.data import DataLoader
 from owlapy.parser import DLSyntaxParser
 from owlapy.render import DLSyntaxObjectRenderer
 from utils.evaluator import Evaluator
-from utils.syntax_checker import SyntaxChecker
+from utils.simple_solution import SimpleSolution
 from torch.nn.utils.rnn import pad_sequence
 #from core.loaders import *
 import warnings
@@ -28,6 +28,10 @@ def collate_batch(batch):
     target_tokens_list = []
     target_labels = []
     for pos_emb, neg_emb, label in batch:
+        if pos_emb.ndim != 2:
+            pos_emb = pos_emb.reshape(1, -1)
+        if neg_emb.ndim != 2:
+            neg_emb = neg_emb.reshape(1, -1)
         pos_emb_list.append(pos_emb)
         neg_emb_list.append(neg_emb)
         target_labels.append(label)
@@ -111,7 +115,7 @@ def launch_service(nces_model: Union[List,str], kb, kwargs):
         output_results = {"IDs": input_ids, "Prediction": [], "Acc": [], "F1": []}
         KB = KnowledgeBase(path=f"datasets/{kb}/{kb}.owl")
         evaluator = Evaluator(KB)
-        syntax_checker = SyntaxChecker(KB)
+        simpleSolution = SimpleSolution(KB)
         renderer = DLSyntaxObjectRenderer()
         All_individuals = set(KB.individuals())
         namespace = KB.ontology()._onto.base_iri
@@ -124,9 +128,8 @@ def launch_service(nces_model: Union[List,str], kb, kwargs):
             try:
                 prediction = dl_parser.parse_expression(prediction_str)
             except Exception:
-                pred = syntax_checker.correct(prediction_str)
-                pred = list(syntax_checker.get_suggestions(pred))[-1]
-                prediction = syntax_checker.get_concept(pred)
+                pred = simpleSolution.correct(prediction_str)
+                prediction = dl_parser.parse_expression(pred)
                 prediction_str = renderer.render(prediction)
             target_expression = dl_parser.parse_expression(target_expr) # The target class expression
             positive_examples = {ind.get_iri().as_str().split("/")[-1] for ind in KB.individuals(target_expression)}
@@ -137,7 +140,7 @@ def launch_service(nces_model: Union[List,str], kb, kwargs):
             output_results["F1"].append(f1)
             pos = list(map(lambda x: namespace+x.split('#')[-1],examples['positive examples'][:5]))
             neg = list(map(lambda x: namespace+x.split('#')[-1], examples['negative examples'][:5]))
-            out_text += f"ID: {input_ids[i]}\n" + f"|E^+|={len(examples['positive examples'])}: {'['+','.join(pos)+',...]'}\n|E^-|={len(examples['negative examples'])}: {'['+','.join(neg)+',...]'}\n\n"
+            out_text += f"ID: {input_ids[i]}\n" + f"|E^+|={len(examples['positive examples'])}: {'['+','.join(pos)+',...]'}\n|E^-|={len(examples['positive examples'])}: {'['+','.join(neg)+',...]'}\n\n"
             
         return out_text, pd.DataFrame(output_results)
     #return predict([], number_of_leaning_problems=1, random_problems=True)

@@ -58,7 +58,6 @@ parser.add_argument('--max_length', type=int, default=32, help='Maximum length o
 parser.add_argument('--drop_prob', type=float, default=0.1, help='Dropout rate in neural networks')
 parser.add_argument('--epochs', type=int, default=500, help='Number of training epochs')
 parser.add_argument('--batch_size', type=int, default=256, help='Training batch size')
-parser.add_argument('--cross_validate', type=str2bool, default=False, help='Whether to use a 10-fold cross-validation setting')
 parser.add_argument('--shuffle_examples', type=str2bool, default=False, help='Whether to shuffle positive and negative examples in the dataloader')
 parser.add_argument('--test', type=str2bool, default=True, help='Whether to evaluate the concept synthesizer on the test data during training')
 parser.add_argument('--final', type=str2bool, default=False, help='Whether to train the concept synthesizer on test+train data')
@@ -91,11 +90,10 @@ for kb in args.kbs:
 
     final = args.final
     test = args.test
-    cross_validate = args.cross_validate
     if args.final:
         data_train = data_train + data_test
         test = False
-        cross_validate = False
-    experiment.train_all_nets(args.models, data_train, data_test, epochs=args.epochs, batch_size=args.batch_size, kf_n_splits=10, 
-                              cross_validate=cross_validate, test=test, save_model = args.save_model, kb_emb_model=args.kb_emb_model,
+    experiment.train_all_nets(args.models, data_train, data_test, epochs=args.epochs, 
+                              batch_size=args.batch_size, test=test, 
+                              save_model = args.save_model, kb_emb_model=args.kb_emb_model,
                               optimizer = args.opt, record_runtime=True, final=final)

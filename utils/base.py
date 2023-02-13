@@ -5,8 +5,7 @@ from ontolearn.knowledge_base import KnowledgeBase
 from typing import Final
 from owlapy.render import DLSyntaxObjectRenderer
 
-class BaseConceptSynthesis:
-    """Supervised Machine Learning approach for learning class expressions in ALC from examples"""
+class DataLoaderBase:
     
     def __init__(self, kwargs):
         self.knowledge_base_path = kwargs.knowledge_base_path

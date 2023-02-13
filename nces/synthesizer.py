@@ -9,6 +9,8 @@ from typing import List, Union
 import pandas as pd
 
 class ConceptSynthesizer:
+    """Deep neural networks learning class expressions in ALC"""
+    
     def __init__(self, kwargs):
         self.kwargs = kwargs
         self.learner_name = kwargs.learner_name
@@ -26,8 +28,6 @@ class ConceptSynthesizer:
             return ConceptLearner_GRU(self.kwargs)
         elif self.learner_name == 'LSTM':
             return ConceptLearner_LSTM(self.kwargs)
-        elif self.learner_name == 'TreeTransformer':
-            return TreeTransformer(self.kwargs)
         else:
             print('Wrong concept learner name')
             raise ValueError

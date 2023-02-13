@@ -1,4 +1,6 @@
-import random
+import random, numpy as np
+from tqdm import tqdm
+
 class ConceptDescriptionGenerator:
     """
     Learning problem generator.
@@ -12,23 +14,16 @@ class ConceptDescriptionGenerator:
         self.max_length = max_length
 
     def apply_rho(self, concept):
-        refinements = {ref for ref in self.rho.refine(concept, max_length=self.max_length)}
-        if refinements:
-            return list(refinements)
+        #refinements = {ref for ref in self.rho.refine(concept, max_length=self.max_length)}
+        return {ref for ref in self.rho.refine(concept, max_length=self.max_length)}
 
     def generate(self):
         roots = self.apply_rho(self.kb.thing)
+        Refinements = set()
+        Refinements.update(roots)
         print ("|Thing refinements|: ", len(roots))
-        Refinements = set(roots)
-        for root in random.sample(roots, k=self.num_rand_samples):
-            current_state = root
-            for _ in range(self.depth):
-                #try:
-                refts = self.apply_rho(current_state)
-                current_state = random.sample(refts, 1)[0] if refts else None
-                if current_state is None:
-                    break
-                Refinements.update(refts)
-#                 except AttributeError:
-#                     pass
+        roots_sample = random.sample(list(roots), k=self.num_rand_samples)
+        print("Size of sample: ", len(roots_sample))
+        for root in tqdm(roots_sample, desc="Refining roots..."):
+            Refinements.update(self.apply_rho(root))
         return Refinements

@@ -1,12 +1,12 @@
 import os, sys
 sys.path.append(os.path.dirname(os.path.realpath(__file__)).split('utils')[0])
 sys.path.append(os.path.dirname(os.path.realpath(__file__)).split('utils')[0]+"utils")
-from nces import BaseConceptSynthesis
+from base import DataLoaderBase
 import numpy as np, torch, pandas as pd
 from data import Data
 import random
 
-class CSDataLoader(BaseConceptSynthesis, Data, torch.utils.data.Dataset):
+class CSDataLoader(DataLoaderBase, Data, torch.utils.data.Dataset):
     def __init__(self, data, embeddings, kwargs):
         self.data_raw = data
         self.embeddings = embeddings

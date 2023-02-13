@@ -2,8 +2,6 @@ import torch, torch.nn as nn, numpy as np
 import torch.nn.functional as F
 from .modules import *
 import sys, os
-#base_path = os.path.dirname(os.path.realpath(__file__)).split('concept_synthesis')[0]
-#sys.path.append(base_path)
 from ontolearn.knowledge_base import KnowledgeBase
 from owlapy.render import DLSyntaxObjectRenderer
 import pandas as pd
@@ -81,7 +79,6 @@ class ConceptLearner_GRU(nn.Module):
         aligned_chars = self.inv_vocab[x.argmax(1).cpu()]
         return aligned_chars, x
 
-    
     
 class SetTransformer(nn.Module):
     def __init__(self, kwargs):
