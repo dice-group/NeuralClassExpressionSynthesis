@@ -31,8 +31,8 @@ class SimpleSolution:
         self.tokenizer = PreTrainedTokenizerFast(tokenizer_object=tokenizer)
         self.tokenizer.pad_token = "[PAD]"
             
-    def correct(self, expression: str):
+    def predict(self, expression: str):
         atomic_classes = [atm for atm in self.tokenizer.tokenize(expression) if atm in self.atomic_concept_names]
         if atomic_classes == []:
             atomic_classes =['⊤']
-        return "⊔".join(atomic_classes)
+        return " ⊔ ".join(atomic_classes)

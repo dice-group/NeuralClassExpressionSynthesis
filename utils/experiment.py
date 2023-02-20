@@ -8,16 +8,13 @@ import sys, os, json
 base_path = os.path.dirname(os.path.realpath(__file__)).split('utils')[0]
 sys.path.append(base_path)
 from .base import DataLoaderBase
-from .dataloader import CSDataLoader
+from .dataloader import NCESDataLoader
 from nces.synthesizer import ConceptSynthesizer
 from torch.optim.lr_scheduler import ExponentialLR
 from torch.nn import CrossEntropyLoss, functional as F
 from torch.nn.utils import clip_grad_value_
 from torch.nn.utils.rnn import pad_sequence
 from collections import defaultdict
-import matplotlib.pyplot as plt
-plt.style.use('seaborn-whitegrid')
-from sklearn.metrics import f1_score, accuracy_score
 import time
 
 class Experiment:
@@ -95,7 +92,6 @@ class Experiment:
     def collate_batch(self, batch):
         pos_emb_list = []
         neg_emb_list = []
-        target_tokens_list = []
         target_labels = []
         for pos_emb, neg_emb, label in batch:
             if pos_emb.ndim != 2:
@@ -111,6 +107,7 @@ class Experiment:
         neg_emb_list = pad_sequence(neg_emb_list, batch_first=True, padding_value=0)
         target_labels = pad_sequence(target_labels, batch_first=True, padding_value=-100)
         return pos_emb_list, neg_emb_list, target_labels    
+        
         
     def map_to_token(self, idx_array):
         return self.cs.model.inv_vocab[idx_array]
@@ -230,10 +227,10 @@ class Experiment:
                     
     def train_all_nets(self, List_nets, train_data, test_data, epochs=200, batch_size=64, test=False, save_model = False, kb_emb_model='ConEx', optimizer = 'Adam', record_runtime=False, final=False):
         self.embeddings = self.cs.get_embedding()
-        train_dataset = CSDataLoader(train_data, self.embeddings, self.kwargs)
+        train_dataset = NCESDataLoader(train_data, self.embeddings, self.kwargs)
         self.num_examples = train_dataset.num_examples
         print(f"\n***Number of examples per learning problem: {self.num_examples}***\n")
-        test_dataset = CSDataLoader(test_data, self.embeddings, self.kwargs)
+        test_dataset = NCESDataLoader(test_data, self.embeddings, self.kwargs)
         train_dataloader = DataLoader(train_dataset, batch_size=batch_size, num_workers=self.num_workers, collate_fn=self.collate_batch, shuffle=True)
         test_dataloader = DataLoader(test_dataset, batch_size=batch_size, num_workers=self.num_workers, collate_fn=self.collate_batch, shuffle=False)
         

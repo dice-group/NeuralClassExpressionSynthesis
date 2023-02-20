@@ -4,7 +4,6 @@ from .modules import *
 import sys, os
 from ontolearn.knowledge_base import KnowledgeBase
 from owlapy.render import DLSyntaxObjectRenderer
-import pandas as pd
 
 class ConceptLearner_LSTM(nn.Module):
     def __init__(self, kwargs):

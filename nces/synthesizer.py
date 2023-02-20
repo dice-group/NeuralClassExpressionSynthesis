@@ -4,8 +4,6 @@ import sys, os
 base_path = os.path.dirname(os.path.realpath(__file__)).split('nces')[0]
 sys.path.append(base_path)
 from .models import *
-from owlapy.model import OWLNamedIndividual
-from typing import List, Union
 import pandas as pd
 
 class ConceptSynthesizer:
@@ -39,5 +37,5 @@ class ConceptSynthesizer:
         assert self.kwargs.pretrained_concept_synthesizer, 'No pretrained length learner'
         self.model = torch.load(self.kwargs.pretrained_concept_synthesizer, map_location=torch.device('cpu'))
         self.model.eval()
-           
+
     

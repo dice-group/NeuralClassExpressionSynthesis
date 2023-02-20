@@ -18,7 +18,6 @@ from owlapy.render import DLSyntaxObjectRenderer
 from utils.evaluator import Evaluator
 from utils.simple_solution import SimpleSolution
 from torch.nn.utils.rnn import pad_sequence
-#from core.loaders import *
 import warnings
 warnings.filterwarnings("ignore")
 
@@ -40,11 +39,10 @@ def collate_batch(batch):
     target_labels = pad_sequence(target_labels, batch_first=True, padding_value=-100)
     return pos_emb_list, neg_emb_list, target_labels
 
-def get_data(kb, embeddings, kwargs, num_lps, selected_lps=[]):
+def get_data(kb, embeddings, kwargs, selected_lps=[]):
     data_test_path = f"datasets/{kb}/Test_data/Data.json"
     with open(data_test_path, "r") as file:
         data_test = json.load(file)
-    num_lps = min(num_lps, len(data_test))
     data_test = [list(data_test.items())[i] for i in selected_lps]
     test_dataset = CSDataLoader(data_test, embeddings, kwargs)
     test_dataloader = DataLoader(test_dataset, batch_size=kwargs.batch_size, num_workers=kwargs.num_workers, collate_fn=collate_batch, shuffle=False)
@@ -64,13 +62,11 @@ def get_ensemble_prediction(models, x1, x2):
 
 def predict_single(model_name, pos_emb, neg_emb):
     model = torch.load(f"datasets/{kb}/Model_weights/{model_name}.pt", map_location=torch.device('cpu'))
-    #print(f"Predictions with {model_name}")
     return model(pos_emb, neg_emb)
 
 def predict_ensemble(model_names, pos_emb, neg_emb):
     models = [torch.load(f"datasets/{kb}/Model_weights/{name}.pt", map_location=torch.device('cpu'))\
               for name in model_names]
-    #print("Predictions with Ensemble model")
     return get_ensemble_prediction(models, pos_emb, neg_emb)
 
 def before_pad(arg):
@@ -81,28 +77,31 @@ def before_pad(arg):
         arg_temp.append(atm)
     return "".join(arg_temp)
 
-
 def launch_service(nces_model: Union[List,str], kb, kwargs):
     with open(f"datasets/{kb}/Test_data/Data.json", "r") as file:
         data_test = json.load(file)
     max_num_lps = len(data_test); del data_test
-    def predict(lp_ids, number_of_leaning_problems, random_problems: bool):
+    def predict(lp_ids, number_of_learning_problems: int, random_problems: bool):
         embeddings = pd.read_csv(f"datasets/{kb}/Embeddings/ConEx_entity_embeddings.csv").set_index('Unnamed: 0')
         kwargs.knowledge_base_path = "datasets/"+f"{kb}/{kb}.owl"
+        number_of_learning_problems = int(number_of_learning_problems)
+        min_num_lps = min(32, max_num_lps)
         if random_problems:
-            input_ids = random.sample(list(range(max_num_lps)), number_of_leaning_problems)
-            if number_of_leaning_problems<32:
-                temp_input_ids = input_ids + random.sample(list(set(range(max_num_lps))-set(input_ids)), 32)
+            input_ids = sorted(random.sample(list(range(max_num_lps)), number_of_learning_problems))
+            if number_of_learning_problems<min_num_lps:
+                remaining = list(set(range(max_num_lps))-set(input_ids))
+                temp_input_ids = input_ids + random.sample(remaining, min(min_num_lps, len(remaining)))
             else:
                 temp_input_ids = input_ids
-            dataset, dataloader = get_data(kb, embeddings, kwargs, number_of_leaning_problems, temp_input_ids)
+            dataset, dataloader = get_data(kb, embeddings, kwargs, temp_input_ids)
         else:
-            input_ids = [int(idx) for idx in lp_ids.split(",")]
-            if len(input_ids)<32:
-                temp_input_ids = input_ids + random.sample(list(set(range(max_num_lps))-set(input_ids)), 32)
+            input_ids = sorted(list({int(idx) for idx in lp_ids.split(",") if int(idx)<max_num_lps}))
+            if len(input_ids)<min_num_lps:
+                remaining = list(set(range(max_num_lps))-set(input_ids))
+                temp_input_ids = input_ids + random.sample(remaining, min(min_num_lps, len(remaining)))
             else:
                 temp_input_ids = input_ids
-            dataset, dataloader = get_data(kb, embeddings, kwargs, number_of_leaning_problems, temp_input_ids)
+            dataset, dataloader = get_data(kb, embeddings, kwargs, temp_input_ids)
         pos_emb, neg_emb, _ = next(iter(dataloader))
         if isinstance(nces_model, str):
             predictions, _ = predict_single(nces_model, pos_emb, neg_emb)
@@ -117,7 +116,7 @@ def launch_service(nces_model: Union[List,str], kb, kwargs):
         evaluator = Evaluator(KB)
         simpleSolution = SimpleSolution(KB)
         renderer = DLSyntaxObjectRenderer()
-        All_individuals = set(KB.individuals())
+        all_individuals = set(KB.individuals())
         namespace = KB.ontology()._onto.base_iri
         if kb == 'vicodi':
             namespace = 'http://vicodi.org/ontology#'
@@ -128,12 +127,12 @@ def launch_service(nces_model: Union[List,str], kb, kwargs):
             try:
                 prediction = dl_parser.parse_expression(prediction_str)
             except Exception:
-                pred = simpleSolution.correct(prediction_str)
+                pred = simpleSolution.predict(prediction_str)
                 prediction = dl_parser.parse_expression(pred)
                 prediction_str = renderer.render(prediction)
             target_expression = dl_parser.parse_expression(target_expr) # The target class expression
-            positive_examples = {ind.get_iri().as_str().split("/")[-1] for ind in KB.individuals(target_expression)}
-            negative_examples = All_individuals-positive_examples
+            positive_examples = set(KB.individuals(target_expression))
+            negative_examples = all_individuals-positive_examples
             acc, f1 = evaluator.evaluate(prediction, positive_examples, negative_examples)
             output_results["Prediction"].append(prediction_str)
             output_results["Acc"].append(acc)
@@ -147,7 +146,7 @@ def launch_service(nces_model: Union[List,str], kb, kwargs):
     gr.Interface(
         fn=predict,
         inputs=[gr.inputs.Textbox(lines=5, placeholder=None, label=f'Learning Problem IDs on Test Set for {kb.upper()} KB (ID<{max_num_lps})'),
-                gr.inputs.Slider(minimum=1, maximum=128),
+                gr.inputs.Slider(minimum=1, maximum=max_num_lps),
                 "checkbox"],
         outputs=[gr.outputs.Textbox(label='Learning Problem'), gr.outputs.Dataframe(label='Predictions')],
         title='Neural Class Expression Synthesis (NCES)',
@@ -179,8 +178,12 @@ if __name__ == '__main__':
     
     Args = parser.parse_args()
     kb = Args.kb
-    #args.knowledge_base_path = "datasets/"+f"{kb}/{kb}.owl"
     if Args.ensemble:
-        launch_service(["SetTransformer", "GRU"], kb, args)
+        if kb in ["carcinogenesis", "semantic_bible"]:
+            launch_service(["SetTransformer", "GRU"], kb, args)
+        elif kb in ["mutagenesis", "vicodi"]:
+            launch_service(["SetTransformer", "LSTM"], kb, args)
+        else:
+            raise ValueError(f"Please choose a valid knowledge base name, i.e., one of [carcinogenesis, mutagenesis, semantic_bible, vicodi]")
     else:
-        launch_service(Args.model, kb, kwargs)
+        launch_service(Args.model, kb, args)
