@@ -18,7 +18,7 @@ class DataLoaderBase:
         vocab = self.atomic_concept_names + self.role_names + ['⊔', '⊓', '∃', '∀', '¬', '⊤', '⊥', '.', ' ', '(', ')']
         vocab = sorted(vocab) + ['PAD']
         self.inv_vocab = vocab
-        self.vocab = {vocab[i]:i for i in range(len(vocab))} #dict(map(reversed, enumerate(vocab)))
+        self.vocab = {vocab[i]:i for i in range(len(vocab))}
         self.max_length = kwargs.max_length
         self.kwargs = kwargs
         

@@ -23,7 +23,7 @@ class ConceptDescriptionGenerator:
         Refinements.update(roots)
         print ("|Thing refinements|: ", len(roots))
         roots_sample = random.sample(list(roots), k=self.num_rand_samples)
-        print("Size of sample: ", len(roots_sample))
+        print("Number of roots: ", len(roots_sample))
         for root in tqdm(roots_sample, desc="Refining roots..."):
             Refinements.update(self.apply_rho(root))
         return Refinements

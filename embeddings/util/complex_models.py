@@ -104,8 +104,8 @@ class ConEx(torch.nn.Module):
         # Convolution
         self.conv1 = torch.nn.Conv1d(in_channels=1, out_channels=self.num_of_output_channels,
                                      kernel_size=(self.kernel_size, self.kernel_size), stride=1, padding=1, bias=True)
-
-        self.fc_num_input = self.embedding_dim * 4 * self.num_of_output_channels  # 4 because of 4 real values in 2 complex numbers
+        # Formula for convolution output shape: (input_dim + 2* padding - kernel_size) / (stride) + 1
+        self.fc_num_input = ((self.embedding_dim+2-self.kernel_size)+1) * (4+2-self.kernel_size+1) * self.num_of_output_channels
         self.fc = torch.nn.Linear(self.fc_num_input, self.embedding_dim * 2)
 
         self.bn_conv1 = torch.nn.BatchNorm2d(self.num_of_output_channels)

@@ -131,9 +131,10 @@ class DLLearnerBinder:
                 self.ignoredConcepts += "\""+prefix+c.split("#")[-1]+"\","
         self.ignoredConcepts = self.ignoredConcepts[:-1]
         self.ignoredConcepts += " }"
-        print("*************************************************************")
-        print('Ignored in dl-learner frame: ', self.ignoredConcepts)
-        print("*************************************************************")
+        if ignoredConcepts:
+            print("*************************************************************")
+            print('Ignored in dl-learner frame: ', self.ignoredConcepts)
+            print("*************************************************************")
         assert len(pos) > 0
         #assert len(neg) > 0
 

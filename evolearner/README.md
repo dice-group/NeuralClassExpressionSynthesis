@@ -1,0 +1,1 @@
+- Run `python run_evolearner.py --kbs kb`. Use options to select the knowledge base, save results, or enable logging. Example `python run_evolearner.py --kbs carcinogenesis --save_results True --verbose True`

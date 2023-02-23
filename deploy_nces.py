@@ -11,42 +11,37 @@ import gradio as gr
 from argparse import ArgumentParser, Namespace
 import random
 from ontolearn.knowledge_base import KnowledgeBase
-from utils.dataloader import CSDataLoader
+from utils.dataloader import NCESDataLoaderDeploy
 from torch.utils.data import DataLoader
 from owlapy.parser import DLSyntaxParser
 from owlapy.render import DLSyntaxObjectRenderer
 from utils.evaluator import Evaluator
 from utils.simple_solution import SimpleSolution
 from torch.nn.utils.rnn import pad_sequence
+import torch.nn.functional as F
 import warnings
 warnings.filterwarnings("ignore")
 
-def collate_batch(batch):
-    pos_emb_list = []
-    neg_emb_list = []
-    target_tokens_list = []
-    target_labels = []
-    for pos_emb, neg_emb, label in batch:
-        if pos_emb.ndim != 2:
-            pos_emb = pos_emb.reshape(1, -1)
-        if neg_emb.ndim != 2:
-            neg_emb = neg_emb.reshape(1, -1)
-        pos_emb_list.append(pos_emb)
-        neg_emb_list.append(neg_emb)
-        target_labels.append(label)
-    pos_emb_list = pad_sequence(pos_emb_list, batch_first=True, padding_value=0)
-    neg_emb_list = pad_sequence(neg_emb_list, batch_first=True, padding_value=0)
-    target_labels = pad_sequence(target_labels, batch_first=True, padding_value=-100)
-    return pos_emb_list, neg_emb_list, target_labels
-
-def get_data(kb, embeddings, kwargs, selected_lps=[]):
-    data_test_path = f"datasets/{kb}/Test_data/Data.json"
-    with open(data_test_path, "r") as file:
-        data_test = json.load(file)
-    data_test = [list(data_test.items())[i] for i in selected_lps]
-    test_dataset = CSDataLoader(data_test, embeddings, kwargs)
+def get_data(kb, embeddings, test_data, num_examples, kwargs, selected_lps):
+    test_data_ = [test_data[i] for i in selected_lps]
+    test_dataset = NCESDataLoaderDeploy(test_data_, embeddings, kwargs)
+    def collate_batch(batch):
+        pos_emb_list = []
+        neg_emb_list = []
+        for pos_emb, neg_emb in batch:
+            if pos_emb.ndim != 2:
+                pos_emb = pos_emb.reshape(1, -1)
+            if neg_emb.ndim != 2:
+                neg_emb = neg_emb.reshape(1, -1)
+            pos_emb_list.append(pos_emb)
+            neg_emb_list.append(neg_emb)
+        pos_emb_list[0] = F.pad(pos_emb_list[0], (0, 0, 0, num_examples - pos_emb_list[0].shape[0]), "constant", 0)
+        pos_emb_list = pad_sequence(pos_emb_list, batch_first=True, padding_value=0)
+        neg_emb_list[0] = F.pad(neg_emb_list[0], (0, 0, 0, num_examples - neg_emb_list[0].shape[0]), "constant", 0)
+        neg_emb_list = pad_sequence(neg_emb_list, batch_first=True, padding_value=0)
+        return pos_emb_list, neg_emb_list
     test_dataloader = DataLoader(test_dataset, batch_size=kwargs.batch_size, num_workers=kwargs.num_workers, collate_fn=collate_batch, shuffle=False)
-    return data_test, test_dataloader
+    return test_data_, test_dataloader
 
 def get_ensemble_prediction(models, x1, x2):
     for i,model in enumerate(models):
@@ -60,14 +55,9 @@ def get_ensemble_prediction(models, x1, x2):
     prediction = model.inv_vocab[scores.argmax(1)]
     return prediction, scores
 
-def predict_single(model_name, pos_emb, neg_emb):
-    model = torch.load(f"datasets/{kb}/Model_weights/{model_name}.pt", map_location=torch.device('cpu'))
+def predict_single(model, pos_emb, neg_emb):
     return model(pos_emb, neg_emb)
 
-def predict_ensemble(model_names, pos_emb, neg_emb):
-    models = [torch.load(f"datasets/{kb}/Model_weights/{name}.pt", map_location=torch.device('cpu'))\
-              for name in model_names]
-    return get_ensemble_prediction(models, pos_emb, neg_emb)
 
 def before_pad(arg):
     arg_temp = []
@@ -78,49 +68,44 @@ def before_pad(arg):
     return "".join(arg_temp)
 
 def launch_service(nces_model: Union[List,str], kb, kwargs):
-    with open(f"datasets/{kb}/Test_data/Data.json", "r") as file:
-        data_test = json.load(file)
-    max_num_lps = len(data_test); del data_test
+    if isinstance(nces_model, str):
+        model = torch.load(f"datasets/{kb}/Model_weights/ConEx_{model_name}.pt", map_location=torch.device('cpu'))
+    else:
+        models = [torch.load(f"datasets/{kb}/Model_weights/ConEx_{name}.pt", map_location=torch.device('cpu'))\
+              for name in nces_model]
+    embeddings = pd.read_csv(f"datasets/{kb}/Embeddings/ConEx_entity_embeddings.csv").set_index('Unnamed: 0')
+    test_data_path = f"datasets/{kb}/Test_data/Data.json"
+    with open(test_data_path, "r") as file:
+        test_data = list(json.load(file).items())
+    max_num_lps = len(test_data)
+    KB = KnowledgeBase(path=f"datasets/{kb}/{kb}.owl")
+    
+    renderer = DLSyntaxObjectRenderer()
+    num_examples = min(KB.individuals_count()//2, 1000)
+    evaluator = Evaluator(KB)
+    simpleSolution = SimpleSolution(KB)
+    all_individuals = set(KB.individuals())
+    kb_namespace = list(KB.individuals())[0].get_iri().get_namespace()
+    dl_parser = DLSyntaxParser(namespace = kb_namespace)
     def predict(lp_ids, number_of_learning_problems: int, random_problems: bool):
-        embeddings = pd.read_csv(f"datasets/{kb}/Embeddings/ConEx_entity_embeddings.csv").set_index('Unnamed: 0')
         kwargs.knowledge_base_path = "datasets/"+f"{kb}/{kb}.owl"
         number_of_learning_problems = int(number_of_learning_problems)
-        min_num_lps = min(32, max_num_lps)
         if random_problems:
             input_ids = sorted(random.sample(list(range(max_num_lps)), number_of_learning_problems))
-            if number_of_learning_problems<min_num_lps:
-                remaining = list(set(range(max_num_lps))-set(input_ids))
-                temp_input_ids = input_ids + random.sample(remaining, min(min_num_lps, len(remaining)))
-            else:
-                temp_input_ids = input_ids
-            dataset, dataloader = get_data(kb, embeddings, kwargs, temp_input_ids)
+            dataset, dataloader = get_data(kb, embeddings, test_data, num_examples, kwargs, input_ids)
         else:
             input_ids = sorted(list({int(idx) for idx in lp_ids.split(",") if int(idx)<max_num_lps}))
-            if len(input_ids)<min_num_lps:
-                remaining = list(set(range(max_num_lps))-set(input_ids))
-                temp_input_ids = input_ids + random.sample(remaining, min(min_num_lps, len(remaining)))
-            else:
-                temp_input_ids = input_ids
-            dataset, dataloader = get_data(kb, embeddings, kwargs, temp_input_ids)
-        pos_emb, neg_emb, _ = next(iter(dataloader))
+            dataset, dataloader = get_data(kb, embeddings, test_data, num_examples, kwargs, input_ids)
+        pos_emb, neg_emb = next(iter(dataloader))
         if isinstance(nces_model, str):
-            predictions, _ = predict_single(nces_model, pos_emb, neg_emb)
+            predictions, _ = predict_single(model, pos_emb, neg_emb)
         else:
-            predictions, _ = predict_ensemble(nces_model, pos_emb, neg_emb)
-        results = list(map(lambda pred: before_pad(pred), predictions[:len(input_ids)]))
+            predictions, _ = get_ensemble_prediction(models, pos_emb, neg_emb)
+        results = list(map(lambda pred: before_pad(pred), predictions))
         print("\nNumber of learning problems: ", len(input_ids), "\n")
         ## Evaluate solutions
         out_text = ""
         output_results = {"IDs": input_ids, "Prediction": [], "Acc": [], "F1": []}
-        KB = KnowledgeBase(path=f"datasets/{kb}/{kb}.owl")
-        evaluator = Evaluator(KB)
-        simpleSolution = SimpleSolution(KB)
-        renderer = DLSyntaxObjectRenderer()
-        all_individuals = set(KB.individuals())
-        namespace = KB.ontology()._onto.base_iri
-        if kb == 'vicodi':
-            namespace = 'http://vicodi.org/ontology#'
-        dl_parser = DLSyntaxParser(namespace = namespace)
         for i in range(len(results)):
             target_expr, examples = dataset[i]
             prediction_str = results[i]
@@ -137,12 +122,11 @@ def launch_service(nces_model: Union[List,str], kb, kwargs):
             output_results["Prediction"].append(prediction_str)
             output_results["Acc"].append(acc)
             output_results["F1"].append(f1)
-            pos = list(map(lambda x: namespace+x.split('#')[-1],examples['positive examples'][:5]))
-            neg = list(map(lambda x: namespace+x.split('#')[-1], examples['negative examples'][:5]))
-            out_text += f"ID: {input_ids[i]}\n" + f"|E^+|={len(examples['positive examples'])}: {'['+','.join(pos)+',...]'}\n|E^-|={len(examples['positive examples'])}: {'['+','.join(neg)+',...]'}\n\n"
+            pos = list(map(lambda x: kb_namespace+x.split('#')[-1],examples['positive examples'][:5]))
+            neg = list(map(lambda x: kb_namespace+x.split('#')[-1], examples['negative examples'][:5]))
+            out_text += f"ID: {input_ids[i]}\n" + f"|E^+|={len(examples['positive examples'])}: {'['+','.join(pos)+',...]'}\n|E^-|={len(examples['negative examples'])}: {'['+','.join(neg)+',...]'}\n\n"
             
         return out_text, pd.DataFrame(output_results)
-    #return predict([], number_of_leaning_problems=1, random_problems=True)
     gr.Interface(
         fn=predict,
         inputs=[gr.inputs.Textbox(lines=5, placeholder=None, label=f'Learning Problem IDs on Test Set for {kb.upper()} KB (ID<{max_num_lps})'),
@@ -179,11 +163,6 @@ if __name__ == '__main__':
     Args = parser.parse_args()
     kb = Args.kb
     if Args.ensemble:
-        if kb in ["carcinogenesis", "semantic_bible"]:
-            launch_service(["SetTransformer", "GRU"], kb, args)
-        elif kb in ["mutagenesis", "vicodi"]:
-            launch_service(["SetTransformer", "LSTM"], kb, args)
-        else:
-            raise ValueError(f"Please choose a valid knowledge base name, i.e., one of [carcinogenesis, mutagenesis, semantic_bible, vicodi]")
+        launch_service(["SetTransformer", "GRU", "LSTM"], kb, args)
     else:
         launch_service(Args.model, kb, args)

@@ -3,11 +3,11 @@ from utils.simple_solution import SimpleSolution
 from utils.evaluator import Evaluator
 from ontolearn.knowledge_base import KnowledgeBase
 from utils.base import DataLoaderBase
-from nces.synthesizer import ConceptSynthesizer
 from owlapy.parser import DLSyntaxParser
 from dataloader import NCESDataLoaderInference
 from torch.utils.data import DataLoader
 from torch.nn.utils.rnn import pad_sequence
+import torch.nn.functional as F
 from tqdm import tqdm
 import json
 import torch, pandas as pd
@@ -22,24 +22,27 @@ def before_pad(arg):
         arg_temp.append(atm)
     return arg_temp
 
-def map_to_token(model, idx_array):
-    return model.inv_vocab[idx_array]
-
-def collate_batch(batch):
-    pos_emb_list = []
-    neg_emb_list = []
-    for pos_emb, neg_emb in batch:
-        pos_emb_list.append(pos_emb)
-        neg_emb_list.append(neg_emb)
-    pos_emb_list = pad_sequence(pos_emb_list, batch_first=True, padding_value=0)
-    neg_emb_list = pad_sequence(neg_emb_list, batch_first=True, padding_value=0)
-    return pos_emb_list, neg_emb_list
-
 def get_data(kb, embeddings, kwargs):
     test_data_path = f"datasets/{kb}/Test_data/Data.json"
     with open(test_data_path, "r") as file:
         test_data = json.load(file)
     test_dataset = NCESDataLoaderInference(list(test_data.items()), embeddings, kwargs)
+    num_examples = test_dataset.num_examples
+    def collate_batch(batch):
+        pos_emb_list = []
+        neg_emb_list = []
+        for pos_emb, neg_emb in batch:
+            if pos_emb.ndim != 2:
+                pos_emb = pos_emb.reshape(1, -1)
+            if neg_emb.ndim != 2:
+                neg_emb = neg_emb.reshape(1, -1)
+            pos_emb_list.append(pos_emb)
+            neg_emb_list.append(neg_emb)
+        pos_emb_list[0] = F.pad(pos_emb_list[0], (0, 0, 0, num_examples - pos_emb_list[0].shape[0]), "constant", 0)
+        pos_emb_list = pad_sequence(pos_emb_list, batch_first=True, padding_value=0)
+        neg_emb_list[0] = F.pad(neg_emb_list[0], (0, 0, 0, num_examples - neg_emb_list[0].shape[0]), "constant", 0)
+        neg_emb_list = pad_sequence(neg_emb_list, batch_first=True, padding_value=0)
+        return pos_emb_list, neg_emb_list
     print("Number of learning problems: ", len(test_dataset))
     test_dataloader = DataLoader(test_dataset, batch_size=kwargs.batch_size, num_workers=kwargs.num_workers, collate_fn=collate_batch, shuffle=False)
     return list(test_data.keys()), test_dataloader
@@ -62,8 +65,6 @@ def predict_class_expressions(kb, model_name, args):
     
         models = [torch.load(f"datasets/{kb}/Model_weights/{args.kb_emb_model}_{name}.pt", map_location=torch.device('cpu'))\
                       for name in model_name]
-        model = models[0] # Needed for vocabulary only, see map_to_token below
-        model.eval()
     else:
         print(f"\n## Single model prediction ({model_name})")
         model = torch.load(f"datasets/{kb}/Model_weights/{args.kb_emb_model}_{model_name}.pt", map_location=torch.device('cpu'))
@@ -95,16 +96,11 @@ def evaluate_nces(kb_name, models, args, save_results=False, verbose=False):
     all_metrics = {m: defaultdict(lambda: defaultdict(list)) for m in models}
     print()
     kb = KnowledgeBase(path=f"datasets/{kb_name}/{kb_name}.owl")
-    namespace = kb.ontology()._onto.base_iri
-    if kb_name == 'family-benchmark':
-        namespace = 'http://www.benchmark.org/family#'
-    if kb_name == 'vicodi':
-        namespace = 'http://vicodi.org/ontology#'
-    print("KB namespace: ", namespace)
+    kb_namespace = list(kb.individuals())[0].get_iri().get_namespace()
     print()
     simpleSolution = SimpleSolution(kb)
     evaluator = Evaluator(kb)
-    dl_parser = DLSyntaxParser(namespace = namespace)
+    dl_parser = DLSyntaxParser(namespace = kb_namespace)
     all_individuals = set(kb.individuals())
     for model_name in models:
         t0 = time.time()
@@ -168,16 +164,11 @@ def evaluate_ensemble(kb_name, args, save_results=False, verbose=False):
                                         ["SetTransformer", "LSTM"], ["GRU", "LSTM"], ["SetTransformer", "GRU", "LSTM"]]}
     print()
     kb = KnowledgeBase(path=f"datasets/{kb_name}/{kb_name}.owl")
-    namespace = kb.ontology()._onto.base_iri
-    if kb_name == 'family-benchmark':
-        namespace = 'http://www.benchmark.org/family#'
-    if kb_name == 'vicodi':
-        namespace = 'http://vicodi.org/ontology#'
-    print("KB namespace: ", namespace)
+    kb_namespace = list(kb.individuals())[0].get_iri().get_namespace()
     print()
     simpleSolution = SimpleSolution(kb)
     evaluator = Evaluator(kb)
-    dl_parser = DLSyntaxParser(namespace = namespace)
+    dl_parser = DLSyntaxParser(namespace = kb_namespace)
     all_individuals = set(kb.individuals())
     for combine in all_metrics.keys():     
         t0 = time.time()
