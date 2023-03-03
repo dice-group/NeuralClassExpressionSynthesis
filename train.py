@@ -64,9 +64,6 @@ parser.add_argument('--final', type=str2bool, default=False, help='Whether to tr
 parser.add_argument('--save_model', type=str2bool, default=True, help='Whether to save the model after training')
 
 args = parser.parse_args()
-
-if args.kb_emb_model not in ['ConEx', 'Complex']:
-    args.input_size = 20
     
 print("Setting: ", vars(args))
 
