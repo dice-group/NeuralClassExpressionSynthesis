@@ -59,4 +59,6 @@ if __name__ == '__main__':
     parser.add_argument('--num_workers', type=int, default=4, help='Number of cpus used during batching')
     parser.add_argument('--store_emb_dataframe', type=str2bool, const=True, default=True, nargs='?', help="Whether to store the embeddings")
     args = parser.parse_args()
+    if args.model_name == "TransE":
+        args.embedding_dim = 2*args.embedding_dim
     start(args)

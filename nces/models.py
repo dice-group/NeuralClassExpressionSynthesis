@@ -27,7 +27,7 @@ class ConceptLearner_LSTM(nn.Module):
         self.fc2 = nn.Linear(kwargs.proj_dim, kwargs.proj_dim)
         self.fc3 = nn.Linear(kwargs.proj_dim, len(self.vocab)*kwargs.max_length)
         
-    def forward(self, x1, x2, target_scores=None):
+    def forward(self, x1, x2):
         seq1, _ = self.lstm(x1)
         seq2, _ = self.lstm(x2)
         out1 = seq1.sum(1).view(-1, self.kwargs.proj_dim)
@@ -64,7 +64,7 @@ class ConceptLearner_GRU(nn.Module):
         self.fc2 = nn.Linear(kwargs.proj_dim, kwargs.proj_dim)
         self.fc3 = nn.Linear(kwargs.proj_dim, len(self.vocab)*kwargs.max_length)
     
-    def forward(self, x1, x2, target_scores=None):
+    def forward(self, x1, x2):
         seq1, _ = self.gru(x1)
         seq2, _ = self.gru(x2)
         out1 = seq1.sum(1).view(-1, self.kwargs.proj_dim)
@@ -109,3 +109,12 @@ class SetTransformer(nn.Module):
         x = self.dec(x).reshape(-1, len(self.vocab), self.max_len)
         aligned_chars = self.inv_vocab[x.argmax(1).cpu()]
         return aligned_chars, x
+
+#class Ensemble(nn.Module):
+#    def __init__(self, kb, models, input_size, proj_dim):
+#        super(Ensemble, self).__init__()
+#        self.name = 'Ensemble'
+#        self.kb = kb
+#        self.models = models
+#        self.head = nn.Sequential(nn.Linear(input_size, proj_dim), nn.Linear())
+#        kb = KnowledgeBase(path=kwargs.knowledge_base_path)
