@@ -18,11 +18,11 @@ conda env create -f environment.yml
 A conda environment (nces) will be created. Next activate the environment:
 ``` conda activate nces```
 
-Download datasets from [drive](https://drive.google.com/file/d/1SJ2vuCjflJld8EEN4ay7Ock_W3F_zgCB/view?usp=sharing). Extract the zip file into NeuralClassExpressionSynthesis/ and if necessary, rename the folder as datasets
+Download datasets from [hobbit](https://hobbitdata.informatik.uni-leipzig.de/NCES/). Extract the zip file into NeuralClassExpressionSynthesis/
 
 To run search based algorithms CELOE, ELTL and ECII, install Java 8+ and Maven 3.6.3+
 
-Dowload DL-Learner-1.4.0 from [github](https://github.com/SmartDataAnalytics/DL-Learner/releases) and extract it into the directory NeuralClassExpressionSynthesis
+Dowload DL-Learner-1.4.0 from [github](https://github.com/SmartDataAnalytics/DL-Learner/releases) and extract it into NeuralClassExpressionSynthesis/
 
 Clone DL-Foil from [bitbucket](https://bitbucket.org/grizzo001/dl-foil.git) into NeuralClassExpressionSynthesis
 
@@ -32,67 +32,10 @@ Clone DL-Foil from [bitbucket](https://bitbucket.org/grizzo001/dl-foil.git) into
 
 
 *Open a terminal in NeuralClassExpressionSynthesis/*
-- Reproduce training NCES: ``` python train.py ``` optionally with the following options:
+- Reproduce training NCES: ``` python train.py ```. Use -h to see configuration options. For example --kbs helps specify the knowledge base name, which should be one of "carcinogenesis", "mutagenesis", "semantic_bible" or "vicodi".
 
-``` 
-  --kbs {carcinogenesis,mutagenesis,semantic_bible,vicodi} [{carcinogenesis,mutagenesis,semantic_bible,vicodi} ...]
-                        Knowledge base name
-  --models MODELS [MODELS ...]
-                        Neural models
-  --kb_emb_model KB_EMB_MODEL
-                        Embedding model name
-  --load_pretrained LOAD_PRETRAINED
-                        Whether to load the pretrained model on carcinogenesis
-  --learner_name {LSTM,GRU,SetTransformer}
-                        Neural model
-  --knowledge_base_path KNOWLEDGE_BASE_PATH
-                        Path to KB owl file
-  --path_to_csv_embeddings PATH_TO_CSV_EMBEDDINGS
-                        KB embedding path
-  --learning_rate LEARNING_RATE
-                        Learning rate
-  --embedding_dim EMBEDDING_DIM
-                        Number of embedding dimensions
-  --input_size INPUT_SIZE
-                        Number of embedding dimensions in the input
-  --num_workers NUM_WORKERS
-                        Number of workers to use to load training data
-  --proj_dim PROJ_DIM   The projection dimension for examples
-  --num_inds NUM_INDS   Number of induced instances
-  --num_heads NUM_HEADS
-                        Number of attention heads
-  --num_seeds NUM_SEEDS
-                        Number of seed components in the output
-  --num_examples NUM_EXAMPLES
-                        Total number of examples for concept learning
-  --ln LN               Whether to use layer normalization
-  --decay_rate DECAY_RATE
-                        Decay rate for the optimizer
-  --grad_clip_value GRAD_CLIP_VALUE
-                        Gradient clip value
-  --opt OPT             Name of the optimizer to use
-  --rnn_n_layers RNN_N_LAYERS
-                        Number of recurrent network layers
-  --max_length MAX_LENGTH
-                        Maximum length of class expressions
-  --drop_prob DROP_PROB
-                        Dropout rate in neural networks
-  --epochs EPOCHS       Number of training epochs
-  --batch_size BATCH_SIZE
-                        Training batch size
-  --cross_validate CROSS_VALIDATE
-                        Whether to use a 10-fold cross-validation setting
-  --shuffle_examples SHUFFLE_EXAMPLES
-                        Whether to shuffle positive and negative examples in the dataloader
-  --test TEST           Whether to evaluate the concept synthesizer on the test data during training
-  --final FINAL         Whether to train the concept synthesizer on test+train data
-  --save_model SAVE_MODEL
-                        Whether to save the model after training
-  ```
+- To reproduce evaluation results on concept learning: ``` python reproduce_nces.py ```. Use -h for more options.
 
-- To reproduce evaluation results on concept learning: ``` python reproduce_nces ```. Use -h for more options.
-
-*Remark: --kb is one of carcinogenesis, mutagenesis, semantic_bible, vicodi*
 
 ### DL-Learner (Lehmann et al.)
 
@@ -140,6 +83,6 @@ To train NCES on a new knowledge base, create a new folder under datasets and ad
 
 ## Start an interactive session with NCES (deployment)
 
-Run ` python deploy_nces.py ` in a terminal. Use -h for more options. A public link will be created and valid for 72 hours. Open the link in a navigator. Start running NCES as in the screenshot below.
+Run ` python deploy_nces.py ` in a terminal. Use -h for more options. A public link will be created and valid for 72 hours. Open the link in a navigator. Start running NCES as in the screenshot below. We plan to host a permanent deployment of NCES on [huggingface](https://huggingface.co/) soon.
 
-![deploy](nces_deployment.png)
+![deploy](nces-deployment.png)

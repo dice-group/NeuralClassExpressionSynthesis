@@ -22,7 +22,7 @@ class KBToDataForConceptSynthesis:
    Finally, we aim at training a deep neural network to predict the syntax of concepts from their instances. Hence, we export each concept and its instances (eventually positive and negative examples) into json files.  
     """
 
-    def __init__(self, path, rho_name="ExpressRefinement", depth=5, max_child_length=25, refinement_expressivity=0.6, downsample_refinements=True, k=10, num_rand_samples=150, min_num_pos_examples=1, max_num_pos_examples=2000):
+    def __init__(self, path, rho_name="ExpressRefinement", max_child_length=25, refinement_expressivity=0.6, downsample_refinements=True, k=10, num_rand_samples=150, min_num_pos_examples=1, max_num_pos_examples=2000):
         self.path = path
         self.dl_syntax_renderer = DLSyntaxObjectRenderer()
         self.kb = KnowledgeBase(path=path)
@@ -35,7 +35,7 @@ class KBToDataForConceptSynthesis:
                                 use_inverse=False, use_card_restrictions=False, use_numeric_datatypes=False, use_time_datatypes=False,\
                                 use_boolean_datatype=False, expressivity=refinement_expressivity) if \
         rho_name == "ExpressRefinement" else ModifiedCELOERefinement(knowledge_base=self.kb)
-        self.lp_gen = ConceptDescriptionGenerator(knowledge_base=self.kb, refinement_operator=rho, depth=depth, num_rand_samples=num_rand_samples)
+        self.lp_gen = ConceptDescriptionGenerator(knowledge_base=self.kb, refinement_operator=rho, num_rand_samples=num_rand_samples)
 
     
     def generate_descriptions(self):
@@ -113,7 +113,6 @@ parser = argparse.ArgumentParser()
 
 parser.add_argument('--kbs', type=str, nargs='+', default=['carcinogenesis'], help='Knowledge base name')
 parser.add_argument('--num_rand_samples', type=int, default=200, help='The number of random samples at each step of the generation process')
-parser.add_argument('--depth', type=int, default=3, help='The depth of refinements')
 parser.add_argument('--max_child_len', type=int, default=15, help='Maximum child length')
 parser.add_argument('--max_num_pos_examples', type=int, default=100000, help='Maximum number of positive examples')
 parser.add_argument('--refinement_expressivity', type=float, default=0.5)
@@ -126,5 +125,5 @@ for kb in args.kbs:
     triples.export_triples()
     with open(f'../datasets/{kb}/data_generation_settings.json', "w") as setting:
         json.dump(vars(args), setting)
-    DataGen = KBToDataForConceptSynthesis(path=f'../datasets/{kb}/{kb}.owl', rho_name=args.rho, depth=args.depth, max_child_length=args.max_child_len, refinement_expressivity=args.refinement_expressivity, downsample_refinements=True, num_rand_samples=args.num_rand_samples, min_num_pos_examples=1, max_num_pos_examples=args.max_num_pos_examples)
+    DataGen = KBToDataForConceptSynthesis(path=f'../datasets/{kb}/{kb}.owl', rho_name=args.rho, max_child_length=args.max_child_len, refinement_expressivity=args.refinement_expressivity, downsample_refinements=True, num_rand_samples=args.num_rand_samples, min_num_pos_examples=1, max_num_pos_examples=args.max_num_pos_examples)
     DataGen.generate_descriptions().save_data()

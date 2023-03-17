@@ -27,6 +27,7 @@ if __name__ == '__main__':
     parser.add_argument('--save_results', type=str2bool, default=False, help='Whether to save the evaluation results')
     parser.add_argument('--verbose', type=str2bool, default=False, help='Whether to print the target and predicted class expressions')
     args = parser.parse_args()
+    nces_args.kb_emb_model = args.kb_emb_model
     
     for kb in args.kbs:
         print()

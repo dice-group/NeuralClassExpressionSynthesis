@@ -70,7 +70,7 @@ def predict_class_expressions(kb, model_name, args):
         model = torch.load(f"datasets/{kb}/Model_weights/{args.kb_emb_model}_{model_name}.pt", map_location=torch.device('cpu'))
         model.eval()
     args.knowledge_base_path = "datasets/"+f"{kb}/{kb}.owl"
-    embeddings = pd.read_csv(f"datasets/{kb}/Embeddings/ConEx_entity_embeddings.csv").set_index('Unnamed: 0')
+    embeddings = pd.read_csv(f"datasets/{kb}/Embeddings/{args.kb_emb_model}_entity_embeddings.csv").set_index('Unnamed: 0')
     test_data, dataloader = get_data(kb, embeddings, args)
     preds = []
     targets = []
@@ -90,9 +90,6 @@ def evaluate_nces(kb_name, models, args, save_results=False, verbose=False):
     print('#'*50)
     print('NCES evaluation on {} KB:'.format(kb_name))
     print('#'*50)
-    desc = ""
-    if args.shuffle_examples:
-        desc = "_Shuffle"
     all_metrics = {m: defaultdict(lambda: defaultdict(list)) for m in models}
     print()
     kb = KnowledgeBase(path=f"datasets/{kb_name}/{kb_name}.owl")
@@ -152,7 +149,7 @@ def evaluate_nces(kb_name, models, args, save_results=False, verbose=False):
                                                                round(all_metrics[model_name]['f1']['std'][0], 2)))
         print()
         if save_results:
-            with open("datasets/"+kb_name+"/Results/NCES"+desc+".json", "w") as file:
+            with open("datasets/"+kb_name+f"/Results/NCES_{args.kb_emb_model}.json", "w") as file:
                 json.dump(all_metrics, file, indent=3, ensure_ascii=False)
 
                 
@@ -222,5 +219,5 @@ def evaluate_ensemble(kb_name, args, save_results=False, verbose=False):
         print()
 
     if save_results:
-        with open(f"datasets/{kb_name}/Results/NCES_Ensemble.json", "w") as file:
+        with open(f"datasets/{kb_name}/Results/NCES_{args.kb_emb_model}_Ensemble.json", "w") as file:
             json.dump(all_metrics, file, indent=3, ensure_ascii=False)

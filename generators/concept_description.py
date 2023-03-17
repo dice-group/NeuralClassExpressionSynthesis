@@ -14,11 +14,11 @@ class ConceptDescriptionGenerator:
         self.max_length = max_length
 
     def apply_rho(self, concept):
-        #refinements = {ref for ref in self.rho.refine(concept, max_length=self.max_length)}
         return {ref for ref in self.rho.refine(concept, max_length=self.max_length)}
 
     def generate(self):
         roots = self.apply_rho(self.kb.thing)
+        ## Now remove redundant expressions before proceeding!
         Refinements = set()
         Refinements.update(roots)
         print ("|Thing refinements|: ", len(roots))
