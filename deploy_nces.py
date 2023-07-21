@@ -85,7 +85,7 @@ def launch_service(nces_model: Union[List,str], kb, kwargs):
     evaluator = Evaluator(KB)
     simpleSolution = SimpleSolution(KB)
     all_individuals = set(KB.individuals())
-    kb_namespace = list(KB.individuals())[0].get_iri().get_namespace()
+    kb_namespace = list(KB.ontology().classes_in_signature())[0].get_iri().get_namespace()
     dl_parser = DLSyntaxParser(namespace = kb_namespace)
     def predict(lp_ids, number_of_learning_problems: int, random_problems: bool):
         kwargs.knowledge_base_path = "datasets/"+f"{kb}/{kb}.owl"

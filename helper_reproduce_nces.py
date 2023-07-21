@@ -93,7 +93,7 @@ def evaluate_nces(kb_name, models, args, save_results=False, verbose=False):
     all_metrics = {m: defaultdict(lambda: defaultdict(list)) for m in models}
     print()
     kb = KnowledgeBase(path=f"datasets/{kb_name}/{kb_name}.owl")
-    kb_namespace = list(kb.individuals())[0].get_iri().get_namespace()
+    kb_namespace = list(kb.ontology().classes_in_signature())[0].get_iri().get_namespace()
     print()
     simpleSolution = SimpleSolution(kb)
     evaluator = Evaluator(kb)

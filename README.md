@@ -4,6 +4,10 @@ Learning class expressions in DL using neural networks
 
 ![ncel-dlo](nces.jpg)
 
+## NEWS
+
+NCES is now available in [Ontolearn](https://github.com/dice-group/Ontolearn/). Please refer to this repository for new releases.
+
 ## Installation
 
 Clone this repository:

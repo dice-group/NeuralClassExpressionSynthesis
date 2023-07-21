@@ -1,16 +1,14 @@
 from typing import Final
-import copy, sys, os, numpy as np
+import copy, sys, os
 sys.path.append(os.path.dirname(os.path.realpath(__file__)).split('helper_classes')[0])
 sys.path.append(os.path.dirname(os.path.realpath(__file__)))
 from owlapy.render import DLSyntaxObjectRenderer
-from metrics import Accuracy, F1
 
 from tokenizers import Tokenizer
 from tokenizers.models import BPE
 from tokenizers.trainers import BpeTrainer
 from tokenizers.pre_tokenizers import Whitespace, WhitespaceSplit
 from transformers import AutoTokenizer, PreTrainedTokenizerFast
-
 os.environ["TOKENIZERS_PARALLELISM"] = "false"
 
 class SimpleSolution:
